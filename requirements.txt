@@ -1,0 +1,11 @@
+pandas
+scikit-learn
+konlpy
+JPype1
+gensim
+scipy
+openai
+chromadb
+langgraph
+python-dotenv 
+tqdm
