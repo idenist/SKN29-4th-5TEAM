@@ -1,7 +1,15 @@
+# apps/notifications/urls.py
+
 from django.urls import path
 
-app_name = "notifications"
+from .views import (
+    NotificationListView,
+    NotificationReadView,
+    NotificationDeleteView,
+)
 
 urlpatterns = [
-    # TODO: notifications 앱의 URL 패턴 추가
+    path("", NotificationListView.as_view(), name="notification-list"),
+    path("<int:notification_id>/read/", NotificationReadView.as_view(), name="notification-read"),
+    path("<int:notification_id>/", NotificationDeleteView.as_view(), name="notification-delete"),
 ]
