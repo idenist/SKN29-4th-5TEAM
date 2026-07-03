@@ -9,3 +9,4 @@ app_name = "chat_rag"
 urlpatterns = [
     path("chat/", AIChatAPIView.as_view(), name="chat"),
 ]
+
