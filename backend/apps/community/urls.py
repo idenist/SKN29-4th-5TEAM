@@ -1,7 +1,8 @@
 from django.urls import path
 
-app_name = "community"
+from .views import CommunityPostListCreateView, CommunityPostDetailView
 
 urlpatterns = [
-    # TODO: community 앱의 URL 패턴 추가
+    path("posts/", CommunityPostListCreateView.as_view(), name="community-post-list"),
+    path("posts/<int:post_id>/", CommunityPostDetailView.as_view(), name="community-post-detail"),
 ]
