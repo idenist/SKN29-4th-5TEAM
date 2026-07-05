@@ -18,3 +18,7 @@ chromadb
 langgraph
 python-dotenv
 tqdm
+boto3
+Pillow
+neo4j
+tavily-python

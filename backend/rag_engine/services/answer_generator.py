@@ -467,7 +467,7 @@ def generate_answer_with_llm(
                     {"role": "user", "content": user_prompt},
                 ],
                 **LLM_PARAMS_BY_ROUTE.get(route, LLM_PARAMS_DEFAULT),
-                max_tokens = 1500,
+                max_completion_tokens = 1500,
             )
             answer = response.choices[0].message.content or ""
             break  # 성공 시 루프 탈출

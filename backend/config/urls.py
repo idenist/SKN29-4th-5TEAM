@@ -12,4 +12,6 @@ urlpatterns = [
     path("api/ai/", include("apps.chat_rag.urls")),
     path("api/recommendations/", include("apps.recommendations.urls")),
     path("api/news/", include("apps.news.urls")),
+    path("api/mypage/", include("apps.mypage.urls")),
+    path("api/uploads/", include("apps.uploads.urls")),
 ]

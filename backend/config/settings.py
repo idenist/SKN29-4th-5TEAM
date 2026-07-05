@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
 
+    # mypage
+    "apps.mypage",
+
     # local apps (apps/ 패키지 하위, import 경로 그대로 사용)
     "apps.users",
     "apps.policies",
@@ -47,6 +50,8 @@ INSTALLED_APPS = [
     "apps.chat_rag",
     "apps.recommendations",
     "apps.news",
+    "apps.uploads",
+    
 ]
 
 MIDDLEWARE = [
@@ -165,3 +170,16 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 ).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
+
+
+# ------------------------------------------------------------------
+# AWS S3 (프로필 이미지 업로드용, 정승이 버킷/IAM 준비)
+# ------------------------------------------------------------------
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")
+
+# 업로드 검증 기준 (지침서 6.10)
+PROFILE_IMAGE_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
+PROFILE_IMAGE_MAX_SIZE_MB = 5
