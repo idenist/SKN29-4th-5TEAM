@@ -1,0 +1,65 @@
+# docker-compose.yml (프로젝트 루트)
+# 로컬 개발/통합 테스트용. Redis/Celery는 아직 포함하지 않음
+# (정승의 데이터 자동화 파이프라인이 실제로 붙을 때 추가 예정)
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-skn_5th_prj}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - CHROMA_PERSIST_DIR=/app/data/vector_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - ./data/vector_db:/app/data/vector_db
+    expose:
+      - "8000"
+
+  # 프론트엔드 컨테이너는 송민지 담당 React 빌드 결과물이 준비되면 연결
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   expose:
+  #     - "3000"
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/app/staticfiles
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  static_volume:
