@@ -1,0 +1,119 @@
+.auth-content-card {
+  overflow: hidden;
+}
+
+.auth-content-header,
+.auth-content-body,
+.auth-content-footer {
+  padding: var(--space-6);
+}
+
+.auth-content-header {
+  display: grid;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  background: rgb(37 99 235 / 0.04);
+}
+
+.auth-content-header h1,
+.auth-content-header p,
+.auth-content-footer p {
+  margin: 0;
+}
+
+.auth-content-header h1 {
+  font-size: var(--font-size-2xl);
+}
+
+.auth-content-header p:not(.eyebrow),
+.auth-content-footer {
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.auth-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auth-profile-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auth-interest-field {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.auth-interest-field legend {
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+}
+
+.auth-interest-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.auth-interest-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-interest-option-selected {
+  border-color: rgb(37 99 235 / 0.4);
+  background: rgb(37 99 235 / 0.08);
+  color: var(--color-primary);
+}
+
+.auth-interest-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+.auth-success {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgb(16 185 129 / 0.12);
+  color: #047857;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.auth-content-footer {
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.auth-content-footer a {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .auth-content-header,
+  .auth-content-body,
+  .auth-content-footer {
+    padding: var(--space-4);
+  }
+}

@@ -25,3 +25,8 @@ Thumbs.db
 # 3차때 사용했던 디렉터리들이고, 4차에서는 사용하지 않음
 app_streamlit/
 backend_fastapi/
+
+
+# node_modules
+frontend/node_modules/
+frontend/dist/

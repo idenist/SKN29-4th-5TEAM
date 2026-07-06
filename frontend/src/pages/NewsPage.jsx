@@ -1,67 +1,66 @@
-// frontend/src/pages/NewsPage.jsx
-import React, { useState, useEffect } from 'react';
-// 민지님이 만들어두신 공통 컴포넌트를 불러와서 씁니다. (경로는 프로젝트에 맞게 수정)
-// import Spinner from '../components/common/Spinner'; 
-// import ErrorMessage from '../components/common/ErrorMessage';
+import { useMemo, useState } from 'react';
+import EmptyState from '../components/common/EmptyState.jsx';
+import PageHeader from '../components/common/PageHeader.jsx';
+import SearchBar from '../components/common/SearchBar.jsx';
+import Select from '../components/common/Select.jsx';
+import NewsList from '../components/news/NewsList.jsx';
+import { newsCategories, newsMock } from '../data/newsMock.js';
 
-const NewsPage = () => {
-  // 1. 상태 관리 (데이터, 로딩상태, 에러상태)
-  const [newsList, setNewsList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const categoryOptions = newsCategories.map((category) => ({ value: category, label: category }));
 
-  // 2. 화면이 처음 켜질 때 뉴스 데이터를 불러오는 함수
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        setIsLoading(true);
-        // 실제 API 연동 시 백엔드 주소나 newsApi.js 함수로 교체합니다.
-        // const response = await getYouthNews(); 
-        // setNewsList(response.data);
-        
-        // 일단 UI 확인을 위해 가짜 데이터(Mock Data)를 넣어둡니다.
-        setNewsList([
-          { id: 1, title: '2026 청년 월세 지원 확대', summary: '국토부, 청년 주거비 부담 완화...', publisher: '한국일보', date: '2026-07-06', link: 'https://example.com' },
-          { id: 2, title: '청년도약계좌 가입 조건 완화', summary: '금융위, 중위소득 기준 변경...', publisher: '경제신문', date: '2026-07-05', link: 'https://example.com' }
-        ]);
-      } catch (err) {
-        setError('뉴스 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); // 에러 발생 시 안내 문구
-      } finally {
-        setIsLoading(false); // 성공하든 실패하든 로딩은 끝남
-      }
-    };
+function matchesKeyword(item, keyword) {
+  const normalized = keyword.trim().toLowerCase();
+  if (!normalized) return true;
+  return [item.title, item.summary, ...item.tags].join(' ').toLowerCase().includes(normalized);
+}
 
-    fetchNews();
-  }, []);
+export default function NewsPage() {
+  const [keyword, setKeyword] = useState('');
+  const [submittedKeyword, setSubmittedKeyword] = useState('');
+  const [category, setCategory] = useState('전체');
 
-  // 3. 화면 렌더링 (순서대로 예외 처리)
-  if (isLoading) return <div>로딩 중... (여기에 Spinner 컴포넌트 렌더링)</div>;
-  if (error) return <div>{error} (여기에 ErrorMessage 컴포넌트 렌더링)</div>;
-  if (newsList.length === 0) return <div>표시할 뉴스가 없습니다.</div>;
+  const filteredNews = useMemo(() => {
+    return newsMock.filter((item) => {
+      const categoryMatched = category === '전체' || item.category === category;
+      return categoryMatched && matchesKeyword(item, submittedKeyword);
+    });
+  }, [category, submittedKeyword]);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>📰 청년 정책 주요 뉴스</h1>
-      
-      {/* 반응형 Grid 레이아웃 (CSS나 Tailwind를 사용해 PC 3열, 모바일 1열로 셋팅) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        {newsList.map((news) => (
-          <div key={news.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
-            <h3>{news.title}</h3>
-            <p>{news.summary}</p>
-            <small>{news.publisher} | {news.date}</small>
-            <br />
-            {/* 원문 링크가 있을 때만 버튼 노출 */}
-            {news.link && (
-              <a href={news.link} target="_blank" rel="noopener noreferrer">
-                <button style={{ marginTop: '10px' }}>원문 보기</button>
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="media-page">
+      <PageHeader
+        kicker="News"
+        title="청년 정책 뉴스"
+        description="정책 변화와 신청 일정을 mock data 기반으로 정리했습니다."
+      />
+
+      <section className="media-toolbar" aria-label="뉴스 검색과 필터">
+        <SearchBar
+          value={keyword}
+          onChange={setKeyword}
+          onSubmit={() => setSubmittedKeyword(keyword)}
+          placeholder="뉴스 제목, 요약, 태그로 검색"
+          label="뉴스 검색어"
+        />
+        <Select
+          label="카테고리"
+          value={category}
+          options={categoryOptions}
+          placeholder=""
+          onChange={(event) => setCategory(event.target.value)}
+        />
+      </section>
+
+      <section className="media-result-summary">
+        <strong>{filteredNews.length}개 뉴스</strong>
+        <span>{submittedKeyword ? `검색어: ${submittedKeyword}` : '전체 뉴스를 표시 중입니다.'}</span>
+      </section>
+
+      {filteredNews.length > 0 ? (
+        <NewsList news={filteredNews} />
+      ) : (
+        <EmptyState title="뉴스가 없습니다" description="검색어를 줄이거나 카테고리를 전체로 변경해 보세요." />
+      )}
     </div>
   );
-};
-
-export default NewsPage;
+}
