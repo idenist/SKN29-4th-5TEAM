@@ -71,6 +71,14 @@ def run_ai_chat(
             detail=str(e),
         )
 
+    except TimeoutError as e:
+        logger.error("LLM timeout: %s", e, exc_info=True)
+        return _build_fallback_response(
+            error_code=ERROR_TIMEOUT,
+            user_message="AI 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+            detail=str(e),
+        )
+        
     except (ConnectionError, OSError) as e:
         logger.error("RAG 연결 오류: %s", e, exc_info=True)
         return _build_fallback_response(

@@ -490,6 +490,25 @@ def _filter_low_score(
         if _safe_float(item.get("score")) >= min_score
     ]
 
+def _apply_final_filter(
+    reranked: list[dict[str, Any]],
+    source_category: str | None,
+    strict_freshness: bool,
+) -> list[dict[str, Any]]:
+    """
+    최종 필터링.
+    startup_notice + 현재성 질문에서는 score가 낮더라도
+    마감 전/마감일 확인 불가 후보를 우선 보존한다.
+    """
+    if source_category == "startup_notice" and strict_freshness:
+        alive_candidates = [
+            item for item in reranked
+            if _get_deadline_rank(item) in {2, 3}
+        ]
+        if alive_candidates:
+            return alive_candidates
+
+    return _filter_low_score(reranked)
 
 def _compact_result(item: dict[str, Any]) -> dict[str, Any]:
     """
@@ -587,6 +606,94 @@ def _compact_result(item: dict[str, Any]) -> dict[str, Any]:
         "application_end_date": application_end_date,
         "is_expired": deadline_status == "expired",
     }
+    
+def _metadata_fallback_startup_open_notices(
+    top_k: int,
+    vector_store: Optional[YouthPolicyVectorStore] = None,
+) -> list[dict[str, Any]]:
+    """
+    semantic search가 현재 신청 가능한 창업공고를 못 찾을 때,
+    Chroma metadata에서 startup_notice + application_end_date >= today 후보를 직접 조회한다.
+    """
+    import os
+    import chromadb
+    from dotenv import load_dotenv
+
+    load_dotenv(".env")
+
+    path = os.getenv("CHROMA_PERSIST_DIR", "../data/vector_db")
+    name = os.getenv("CHROMA_COLLECTION_NAME", "youth_opportunity_chunks")
+
+    collection = chromadb.PersistentClient(path=path).get_collection(name)
+
+    rows = collection.get(
+        where={"source_category": "startup_notice"},
+        limit=5000,
+        include=["metadatas", "documents"],
+    )
+
+    ids = rows.get("ids") or []
+    documents = rows.get("documents") or []
+    metadatas = rows.get("metadatas") or []
+
+    today = date.today().isoformat()
+    candidates: list[dict[str, Any]] = []
+
+    for idx, metadata in enumerate(metadatas):
+        metadata = metadata or {}
+        end_date = str(metadata.get("application_end_date") or "").strip()
+
+        if not end_date or end_date < today:
+            continue
+
+        title = str(
+            metadata.get("title")
+            or metadata.get("policy_name")
+            or metadata.get("name")
+            or ""
+        ).strip()
+
+        item_id = str(
+            metadata.get("item_id")
+            or metadata.get("policy_id")
+            or ids[idx]
+            or ""
+        ).strip()
+
+        candidates.append(
+            {
+                "item_id": item_id,
+                "policy_id": item_id,
+                "title": title,
+                "policy_name": title,
+                "source_category": "startup_notice",
+                "domain": metadata.get("domain", "startup"),
+                "score": 1.0,
+                "text": documents[idx] if idx < len(documents) else "",
+                "metadata": {
+                    **metadata,
+                    "item_id": item_id,
+                    "policy_id": item_id,
+                    "title": title,
+                    "policy_name": title,
+                    "source_category": "startup_notice",
+                    "domain": metadata.get("domain", "startup"),
+                    "application_end_date": end_date,
+                    "deadline_status": "open",
+                    "is_expired": False,
+                },
+            }
+        )
+
+    candidates = sorted(
+        candidates,
+        key=lambda item: (
+            str((item.get("metadata") or {}).get("application_end_date") or "9999-99-99"),
+            -_safe_int((item.get("metadata") or {}).get("info_score"), default=0),
+        ),
+    )
+
+    return candidates[:top_k]
 
 
 def retrieve_policies(
@@ -612,9 +719,13 @@ def retrieve_policies(
 
     normalized_filters = _normalize_filters(filters)
 
-    fetch_k = max(DEFAULT_FETCH_K, top_k * 15)
     source_category = normalized_filters.get("source_category")
     strict_freshness = _has_freshness_intent(query)
+
+    if source_category == "startup_notice" and strict_freshness:
+        fetch_k = max(DEFAULT_FETCH_K, top_k * 80, 300)
+    else:
+        fetch_k = max(DEFAULT_FETCH_K, top_k * 15)
 
     # 1차 검색: 필터 포함
     raw_results = search_policy_chunks(
@@ -644,7 +755,11 @@ def retrieve_policies(
         preferred_source_category=source_category,
         strict_freshness=strict_freshness,
     )
-    filtered = _filter_low_score(reranked)
+    filtered = _apply_final_filter(
+        reranked=reranked,
+        source_category=source_category,
+        strict_freshness=strict_freshness,
+    )
 
     # 도메인/source_category 필터 때문에 결과가 부족하면 둘 다 제거하고 fallback
     if len(filtered) < top_k and (normalized_filters.get("domain") or source_category):
@@ -683,7 +798,17 @@ def retrieve_policies(
             preferred_source_category=source_category,
             strict_freshness=strict_freshness,
         )
-        filtered = _filter_low_score(reranked)
+        filtered = _apply_final_filter(
+            reranked=reranked,
+            source_category=source_category,
+            strict_freshness=strict_freshness,
+        )
+
+    if not filtered and source_category == "startup_notice" and strict_freshness:
+        filtered = _metadata_fallback_startup_open_notices(
+        top_k=top_k,
+        vector_store=vector_store,
+    )
 
     return [_compact_result(item) for item in filtered[:top_k]]
 
