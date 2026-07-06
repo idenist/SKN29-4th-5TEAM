@@ -25,16 +25,30 @@ class Policy(models.Model):
 
     # 기본 식별 정보
     item_id = models.CharField(max_length=100, primary_key=True)
+    original_id = models.CharField(
+        max_length=100, blank=True, default="", db_index=True,
+        help_text="통합 전 출처(온통청년/K-Startup/고용24)의 원본 ID (중복/변경 감지 추적용)",
+    )
     source_category = models.CharField(
         max_length=30, choices=SOURCE_CATEGORY_CHOICES, db_index=True
+    )
+    source_name = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="세부 출처/운영 플랫폼명 (예: 온통청년, K-Startup, 고용24)",
     )
     title = models.CharField(max_length=300)
     domain = models.CharField(max_length=200, blank=True)
 
     # 상세 내용
     policy_summary = models.TextField(blank=True)
-    participation_target = models.CharField(max_length=300, blank=True)
+    participation_target = models.TextField(blank=True)  # 300자 제한 해제
+    benefit_text = models.TextField(
+        blank=True, default="", help_text="실제 지원금/교육비/혜택 내용"
+    )
     region_codes = models.JSONField(default=list, blank=True)
+    location = models.TextField(
+        blank=True, default="", help_text="원문 장소/주소 (region_codes와 별도, 상세화면용)"
+    )
 
     # 정책 전용 필드 (policies.json에서 join하여 보충 — 정승 담당)
     income_condition = models.TextField(blank=True, default="")
@@ -44,14 +58,35 @@ class Policy(models.Model):
     age_max = models.IntegerField(null=True, blank=True)
 
     # 신청 기간
-    application_period_text = models.CharField(max_length=200, blank=True)
+    application_period_text = models.TextField(blank=True)  # 200자 제한 해제
     application_start_date = models.DateField(null=True, blank=True)
     application_end_date = models.DateField(null=True, blank=True)
+    application_method = models.CharField(
+        max_length=100, blank=True, default="", help_text="온라인/방문/이메일 등 신청 방법"
+    )
+
+    # 운영 기간 (신청기간과 별개 — 교육/사업 실제 운영 기간)
+    program_start_date = models.DateField(null=True, blank=True)
+    program_end_date = models.DateField(null=True, blank=True)
+    program_period_text = models.TextField(
+        blank=True, default="", help_text="운영기간 원문 텍스트"
+    )
 
     # 링크
     application_url = models.URLField(max_length=500, blank=True)
     source_url = models.URLField(max_length=500, blank=True)
     source_url_2 = models.URLField(max_length=500, blank=True)
+
+    # 운영/문의
+    organization = models.CharField(max_length=200, blank=True, default="")
+    contact = models.CharField(
+        max_length=200, blank=True, default="", help_text="문의처 (담당자/전화/이메일 등)"
+    )
+
+    # 원본 보존 (source_category별 그 외 원본 필드 전체)
+    raw_data = models.JSONField(
+        default=dict, blank=True, help_text="출처별 나머지 원본 필드 전체 보존용"
+    )
 
     # 메타 정보
     info_score = models.IntegerField(default=0)

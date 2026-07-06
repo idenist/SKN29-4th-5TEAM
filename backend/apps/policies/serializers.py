@@ -14,6 +14,7 @@ class PolicyListSerializer(serializers.ModelSerializer):
             "source_category",
             "title",
             "domain",
+            "organization",
             "participation_target",
             "region_codes",
             "application_end_date",
@@ -23,7 +24,7 @@ class PolicyListSerializer(serializers.ModelSerializer):
 
 
 class PolicyDetailSerializer(serializers.ModelSerializer):
-    """정책 상세 조회용 - 전체 필드"""
+    """정책 상세 조회용 - 전체 필드 (신규 필드는 all이라 자동 포함됨)"""
 
     class Meta:
         model = Policy

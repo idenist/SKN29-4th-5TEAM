@@ -1,19 +1,14 @@
-from rest_framework import permissions, status
-from rest_framework.response import Response
+# 저장 위치: backend/apps/mypage/views.py  (덮어쓰기)
+# 변경점: success_response 로컬 정의 제거 -> apps.common.responses에서 import
+from rest_framework import permissions
 from rest_framework.views import APIView
 
+from apps.common.responses import success_response
 from apps.notifications.models import Notification
 from apps.policies.models import Scrap, SearchHistory, ViewedPolicy
 from apps.users.serializers import UserProfileSerializer
 
 from .serializers import MypageSummarySerializer
-
-
-def success_response(data=None, message="", status_code=status.HTTP_200_OK):
-    return Response(
-        {"success": True, "data": data, "message": message, "error": None},
-        status=status_code,
-    )
 
 
 class MypageSummaryView(APIView):
