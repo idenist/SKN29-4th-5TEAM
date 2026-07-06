@@ -74,7 +74,6 @@
 ---
 
 ## 🏗 시스템 아키텍처 (System Architecture)
-*(윤승혁 님이 작성하실 시스템 구성도 이미지가 완성되면 아래 위치에 업데이트하세요.)*
 
 <!-- <img src="./documents/assets/system_architecture.png" alt="시스템 구성도" width="800" /> -->
 * **클라이언트 흐름:** React Frontend ➔ Nginx (Reverse Proxy) ➔ Gunicorn ➔ Django API[cite: 2]
