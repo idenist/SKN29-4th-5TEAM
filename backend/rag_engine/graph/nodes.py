@@ -865,6 +865,11 @@ def router_node(state: GraphState) -> GraphState:
 
     if route in {"전체", "기타"}:
         filters.pop("domain", None)
+    elif source_category == "startup_notice":
+        # startup_notice의 Chroma metadata domain은 "startup"이므로
+        # route 값인 "창업"을 domain 필터로 걸면 검색 결과가 0건이 된다.
+        # 창업공고는 source_category 자체가 충분히 강한 필터이므로 domain 필터를 제거한다.
+        filters.pop("domain", None)
     else:
         filters["domain"] = route
 
