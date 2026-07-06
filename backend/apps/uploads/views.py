@@ -1,24 +1,13 @@
+# 저장 위치: backend/apps/uploads/views.py  (덮어쓰기)
+# 변경점: success_response/error_response 로컬 정의 제거 -> apps.common.responses에서 import
 from botocore.exceptions import BotoCoreError, ClientError
 from rest_framework import permissions, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.common.responses import success_response, error_response
 
 from .serializers import ProfileImageUploadSerializer
 from .services import upload_profile_image, delete_profile_image
-
-
-def success_response(data=None, message="", status_code=status.HTTP_200_OK):
-    return Response(
-        {"success": True, "data": data, "message": message, "error": None},
-        status=status_code,
-    )
-
-
-def error_response(message="", error=None, status_code=status.HTTP_400_BAD_REQUEST):
-    return Response(
-        {"success": False, "data": None, "message": message, "error": error},
-        status=status_code,
-    )
 
 
 class ProfileImageUploadView(APIView):
@@ -42,7 +31,6 @@ class ProfileImageUploadView(APIView):
         image_file = serializer.validated_data["image"]
 
         try:
-            # 기존 이미지가 있으면 먼저 삭제 (실패해도 무시하고 계속 진행)
             delete_profile_image(profile.profile_image_url)
             new_url = upload_profile_image(request.user, image_file)
         except (BotoCoreError, ClientError) as e:

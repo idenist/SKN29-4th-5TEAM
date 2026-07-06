@@ -1,6 +1,9 @@
+# 저장 위치: backend/apps/policies/views.py  (덮어쓰기)
+# 변경점: success_response/error_response 로컬 정의 제거 -> apps.common.responses에서 import
 from django.db.models import Q
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
+
+from apps.common.responses import success_response, error_response
 
 from .models import Policy, Scrap, SearchHistory, ViewedPolicy
 from .serializers import (
@@ -12,28 +15,13 @@ from .serializers import (
 )
 
 
-def success_response(data=None, message="", status_code=status.HTTP_200_OK):
-    """공통 응답 형식 (지침서 4.1 공통 API 응답 통일 기준)"""
-    return Response(
-        {"success": True, "data": data, "message": message, "error": None},
-        status=status_code,
-    )
-
-
-def error_response(message="", error=None, status_code=status.HTTP_400_BAD_REQUEST):
-    return Response(
-        {"success": False, "data": None, "message": message, "error": error},
-        status=status_code,
-    )
-
-
 # ---------------------------------------------------------
 # 정책 목록 / 검색
 # ---------------------------------------------------------
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
-    쿼리 파라미터: keyword, region, source_category
+    쿼리 파라미터: keyword, region, source_category, age
     """
 
     serializer_class = PolicyListSerializer
@@ -44,6 +32,7 @@ class PolicyListView(generics.ListAPIView):
         keyword = self.request.query_params.get("keyword")
         region = self.request.query_params.get("region")
         source_category = self.request.query_params.get("source_category")
+        age = self.request.query_params.get("age")
 
         if keyword:
             queryset = queryset.filter(
@@ -53,6 +42,14 @@ class PolicyListView(generics.ListAPIView):
             queryset = queryset.filter(region_codes__contains=[region])
         if source_category:
             queryset = queryset.filter(source_category=source_category)
+
+        if age:
+            age = int(age)
+            queryset = queryset.filter(
+                Q(age_min__isnull=True) | Q(age_min__lte=age),
+            ).filter(
+                Q(age_max__isnull=True) | Q(age_max__gte=age),
+            )
 
         if keyword and self.request.user.is_authenticated:
             SearchHistory.objects.create(user=self.request.user, keyword=keyword)
