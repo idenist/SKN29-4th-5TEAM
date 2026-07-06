@@ -172,6 +172,15 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 
 CORS_ALLOW_CREDENTIALS = True
 
+# ------------------------------------------------------------------
+# CSRF (Django admin 등 세션 기반 로그인용. 배포 시 .env로 실제 도메인 추가)
+# ------------------------------------------------------------------
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:3000",
+).split(",")
+
 
 # ------------------------------------------------------------------
 # AWS S3 (프로필 이미지 업로드용, 정승이 버킷/IAM 준비)
