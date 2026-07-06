@@ -196,6 +196,32 @@ def _filter_by_source_category(
         return matched
     return results
 
+def _filter_by_preferred_domain(
+    results: list[dict[str, Any]],
+    preferred_domain: str | None,
+    min_results: int = 3,
+) -> list[dict[str, Any]]:
+    """
+    preferred_domain과 직접 맞는 후보가 충분하면,
+    다른 domain 후보를 제외하여 답변 품질을 안정화한다.
+
+    예:
+    - route=주거이고 주거 후보가 3개 이상이면
+      복지문화/참여기반 후보는 답변 후보에서 제외한다.
+    """
+    if not preferred_domain:
+        return results
+
+    matched = [
+        item
+        for item in results
+        if _domain_match(item, preferred_domain)
+    ]
+
+    if len(matched) >= min_results:
+        return matched
+
+    return results
 
 def _has_freshness_intent(query: str) -> bool:
     """
@@ -604,8 +630,14 @@ def retrieve_policies(
         source_category=source_category,
         min_results=min(top_k, 3),
     )
+    
+    domain_filtered_results = _filter_by_preferred_domain(
+        results=category_filtered_results,
+        preferred_domain=normalized_filters.get("domain"),
+        min_results=min(top_k, 3),
+    )
 
-    deduped = _deduplicate_by_policy_id(category_filtered_results)
+    deduped = _deduplicate_by_policy_id(domain_filtered_results)
     reranked = _rerank_results(
         deduped,
         preferred_domain=normalized_filters.get("domain"),
@@ -638,7 +670,13 @@ def retrieve_policies(
             min_results=min(top_k, 3),
         )
 
-        deduped = _deduplicate_by_policy_id(category_filtered_results)
+        domain_filtered_results = _filter_by_preferred_domain(
+            results=category_filtered_results,
+            preferred_domain=normalized_filters.get("domain"),
+            min_results=min(top_k, 3),
+        )
+
+        deduped = _deduplicate_by_policy_id(domain_filtered_results)
         reranked = _rerank_results(
             deduped,
             preferred_domain=normalized_filters.get("domain"),

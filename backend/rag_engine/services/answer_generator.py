@@ -20,6 +20,17 @@ load_dotenv()
 DEFAULT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.4-nano")
 MISSING_TEXT = "제공된 데이터에는 정보가 없습니다."
 
+ANSWER_STYLE_GUIDE = """
+[응답 형식 지침]
+- 전체 답변은 900자 내외로 작성한다.
+- 추천 항목은 최대 3개만 작성한다.
+- 각 항목은 제목, 추천 이유, 핵심 지원 내용, 신청기간, 출처/신청 URL, 확인 필요 사항만 간단히 작성한다.
+- 같은 표현을 반복하지 않는다.
+- 프론트엔드 카드에 표시될 상세 정보까지 본문에 길게 풀어쓰지 않는다.
+- 마지막에 "필요하시면..." 같은 추가 질문 유도 문장을 작성하지 않는다.
+- 제공된 데이터에 없는 정보는 "원문 확인 필요"로 짧게 표시한다.
+""".strip()
+
 # temperature / top_p use-case별 파라미터
 LLM_PARAMS_BY_ROUTE = {
     "질의응답":  {"temperature": 0.2, "top_p": 0.9},   # 기본 QA
@@ -442,13 +453,34 @@ def generate_answer_with_llm(
             "지역, 나이, 관심 분야 조건을 조금 넓혀 다시 검색해 주세요."
         )
 
-    compact_policies = _compact_policies_for_prompt(policies)
+    compact_policies = _compact_policies_for_prompt(policies)[:3]
+
+    compact_policies = [
+        {
+            "title": policy.get("title"),
+            "item_type_label": policy.get("item_type_label"),
+            "domain": policy.get("domain"),
+            "eligibility": policy.get("eligibility"),
+            "support_content": _truncate_text(policy.get("support_content", ""), 250),
+            "application_period": policy.get("application_period"),
+            "application_method": _truncate_text(policy.get("application_method", ""), 180),
+            "required_documents": _truncate_text(policy.get("required_documents", ""), 180),
+            "source_url": policy.get("source_url"),
+            "application_url": policy.get("application_url"),
+            "deadline_display": policy.get("deadline_display"),
+            "matched_conditions": (policy.get("matched_conditions") or [])[:2],
+            "missing_conditions": (policy.get("missing_conditions") or [])[:2],
+            "cautions": (policy.get("cautions") or [])[:2],
+        }
+        for policy in compact_policies
+    ]
 
     user_prompt = ANSWER_GENERATION_USER_PROMPT_TEMPLATE.format(
         query=query,
         user_conditions=json.dumps(user_conditions, ensure_ascii=False, indent=2),
         policies=json.dumps(compact_policies, ensure_ascii=False, indent=2),
     )
+    user_prompt += f"\n\n{ANSWER_STYLE_GUIDE}"
 
     # ← 이 줄 추가
     if graph_context:
@@ -467,7 +499,7 @@ def generate_answer_with_llm(
                     {"role": "user", "content": user_prompt},
                 ],
                 **LLM_PARAMS_BY_ROUTE.get(route, LLM_PARAMS_DEFAULT),
-                max_completion_tokens = 1500,
+                max_completion_tokens = 1800,
             )
             answer = response.choices[0].message.content or ""
             break  # 성공 시 루프 탈출

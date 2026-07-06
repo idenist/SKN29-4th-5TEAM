@@ -3,8 +3,6 @@
 import logging
 from typing import Any
 
-from rag_engine.graph.workflow import run_rag_workflow
-
 logger = logging.getLogger(__name__)
 
 FALLBACK_ANSWER = (
@@ -12,6 +10,19 @@ FALLBACK_ANSWER = (
     "잠시 후 다시 시도하거나 공식 출처에서 직접 확인해 주세요."
 )
 
+ERROR_EMPTY_MESSAGE = "EMPTY_MESSAGE"
+ERROR_WORKFLOW_PARSE = "WORKFLOW_PARSE_ERROR"
+ERROR_CONNECTION = "AI_CONNECTION_ERROR"
+ERROR_RATE_LIMIT = "LLM_RATE_LIMIT"
+ERROR_TIMEOUT = "LLM_TIMEOUT"
+ERROR_AUTH = "LLM_AUTH_ERROR"
+ERROR_VECTOR_DB = "VECTOR_DB_ERROR"
+ERROR_UNKNOWN = "AI_SERVICE_ERROR"
+
+EMPTY_DISPLAY_TEXT = "정보 없음"
+CARD_SUMMARY_MAX_CHARS = 180
+CARD_TEXT_MAX_CHARS = 300
+CARD_LIST_MAX_ITEMS = 3
 
 class WorkflowParsingError(Exception):
     pass
@@ -25,12 +36,16 @@ def run_ai_chat(
 ) -> dict[str, Any]:
     """
     Django /api/ai/chat/에서 호출하는 AI 챗봇 서비스 진입점.
-    3차 run_rag_chat()의 Django 이식 버전.
+    기존 RAG workflow를 Django 서비스 레이어에서 호출한다.
     """
 
     try:
         if not message or not message.strip():
             return _build_empty_message_response()
+
+        # RAG import는 함수 내부에서 수행한다.
+        # 이유: RAG/Chroma/OpenAI 환경 문제가 있어도 Django 서버 시작 자체는 막지 않기 위함.
+        from rag_engine.graph.workflow import run_rag_workflow
 
         query = _build_query_with_profile(
             message=message.strip(),
@@ -43,34 +58,67 @@ def run_ai_chat(
             return_full_state=False,
         )
 
-        return _workflow_result_to_ai_response(raw)
+        response = _workflow_result_to_ai_response(raw)
+        _apply_user_profile_to_response_meta(response, user_profile)
+        return response
 
     except WorkflowParsingError as e:
         logger.error("workflow 파싱 오류: %s", e)
-        return _build_fallback_response(str(e))
+        return _build_fallback_response(
+            error_code=ERROR_WORKFLOW_PARSE,
+            user_message="AI 응답 처리 중 문제가 발생했습니다.",
+            detail=str(e),
+        )
 
     except (ConnectionError, OSError) as e:
         logger.error("RAG 연결 오류: %s", e, exc_info=True)
-        return _build_fallback_response(str(e))
+        return _build_fallback_response(
+            error_code=ERROR_CONNECTION,
+            user_message="AI 검색 서비스 연결에 일시적인 문제가 발생했습니다.",
+            detail=str(e),
+        )
 
     except Exception as e:
         err = str(e).lower()
 
         if any(k in err for k in ("ratelimit", "rate limit", "429")):
             logger.error("LLM RateLimit: %s", e)
-            return _build_fallback_response("LLM 사용량 제한이 발생했습니다.")
+            return _build_fallback_response(
+                error_code=ERROR_RATE_LIMIT,
+                user_message="현재 AI 요청이 많아 잠시 후 다시 시도해 주세요.",
+                detail=str(e),
+            )
 
         if any(k in err for k in ("timeout", "timed out")):
             logger.error("LLM timeout: %s", e)
-            return _build_fallback_response("LLM 응답 시간이 초과되었습니다.")
+            return _build_fallback_response(
+                error_code=ERROR_TIMEOUT,
+                user_message="AI 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+                detail=str(e),
+            )
 
         if any(k in err for k in ("authenticationerror", "401", "api key")):
             logger.error("LLM 인증 오류: %s", e)
-            return _build_fallback_response("LLM API 인증 오류가 발생했습니다.")
+            return _build_fallback_response(
+                error_code=ERROR_AUTH,
+                user_message="AI 인증 설정에 문제가 발생했습니다.",
+                detail=str(e),
+            )
+
+        if any(k in err for k in ("no such file", "not found", "collection", "chroma")):
+            logger.error("Vector DB 오류: %s", e, exc_info=True)
+            return _build_fallback_response(
+                error_code=ERROR_VECTOR_DB,
+                user_message="정책 검색 데이터 연결에 문제가 발생했습니다.",
+                detail=str(e),
+            )
 
         logger.error("workflow 알 수 없는 오류: %s", e, exc_info=True)
-        return _build_fallback_response(str(e))
-
+        return _build_fallback_response(
+            error_code=ERROR_UNKNOWN,
+            user_message="AI 처리 중 알 수 없는 문제가 발생했습니다.",
+            detail=str(e),
+        )
 
 def _build_query_with_profile(
     message: str,
@@ -156,6 +204,47 @@ def _workflow_result_to_ai_response(raw: dict[str, Any]) -> dict[str, Any]:
         },
     }
 
+def _apply_user_profile_to_response_meta(
+    response: dict[str, Any],
+    user_profile: dict[str, Any] | None,
+) -> None:
+    """
+    workflow가 user_profile을 직접 받지 않는 구조라서,
+    최종 응답 meta.user_conditions에 요청 user_profile 값을 보정한다.
+
+    검색/라우팅 자체를 바꾸는 함수는 아니고,
+    프론트에서 확인하는 사용자 조건 표시를 안정화하는 용도다.
+    """
+
+    if not isinstance(response, dict) or not user_profile:
+        return
+
+    meta = response.setdefault("meta", {})
+    conditions = meta.setdefault("user_conditions", {})
+
+    age = user_profile.get("age")
+    region = user_profile.get("region")
+    region_code = user_profile.get("region_code")
+    interests = user_profile.get("interests") or []
+    interest_domain = user_profile.get("interest_domain")
+
+    if age is not None and not conditions.get("age"):
+        conditions["age"] = age
+
+    if region and not conditions.get("region"):
+        conditions["region"] = region
+
+    if region_code:
+        conditions["region_code"] = region_code
+
+    if interests and not conditions.get("interests"):
+        conditions["interests"] = interests
+
+    if not interest_domain and isinstance(interests, list) and interests:
+        interest_domain = interests[0]
+
+    if interest_domain and not conditions.get("interest_domain"):
+        conditions["interest_domain"] = interest_domain
 
 def _policy_to_recommendation(policy: dict[str, Any]) -> dict[str, Any]:
     metadata = policy.get("metadata") or {}
@@ -173,87 +262,139 @@ def _policy_to_recommendation(policy: dict[str, Any]) -> dict[str, Any]:
         or _safe_str(metadata.get("title"))
         or _safe_str(policy.get("policy_name"))
         or _safe_str(metadata.get("policy_name"))
+        or "제목 없음"
     )
 
-    source_url = (
-        _safe_str(metadata.get("source_url"))
-        or _safe_str(policy.get("source_url"))
+    source_category = _safe_str(
+        policy.get("source_category") or metadata.get("source_category")
+    )
+
+    domain = (
+        _safe_str(policy.get("domain"))
+        or _safe_str(metadata.get("domain"))
         or None
     )
 
-    application_url = (
+    raw_source_url = (
+        _safe_str(metadata.get("source_url"))
+        or _safe_str(policy.get("source_url"))
+    )
+
+    raw_application_url = (
         _safe_str(metadata.get("application_url"))
         or _safe_str(policy.get("application_url"))
         or _extract_field_from_text(text, "application_url")
-        or None
     )
 
-    support_content = (
+    source_url = _first_non_empty(raw_source_url, raw_application_url)
+    application_url = _first_non_empty(raw_application_url, raw_source_url)
+    action_url = _first_non_empty(application_url, source_url)
+
+    raw_support_content = (
         _safe_str(policy.get("support_content"))
         or _extract_field_from_text(text, "support_content")
         or _extract_field_from_text(text, "policy_summary")
-        or "정보 없음"
+        or EMPTY_DISPLAY_TEXT
     )
 
-    application_period = (
+    raw_application_period = (
         _safe_str(policy.get("application_period"))
         or _extract_field_from_text(text, "application_period_text")
-        or "정보 없음"
+        or EMPTY_DISPLAY_TEXT
     )
 
-    required_documents = (
+    raw_required_documents = (
         _safe_str(policy.get("required_documents"))
         or _extract_field_from_text(text, "required_documents")
-        or "정보 없음"
+        or EMPTY_DISPLAY_TEXT
     )
+
+    summary = (
+        _safe_str(policy.get("summary"))
+        or _safe_str(metadata.get("summary"))
+        or _extract_field_from_text(text, "policy_summary")
+        or raw_support_content
+    )
+
+    if not summary or summary == EMPTY_DISPLAY_TEXT:
+        if raw_application_period != EMPTY_DISPLAY_TEXT:
+            summary = f"신청기간: {raw_application_period}"
+        elif raw_required_documents != EMPTY_DISPLAY_TEXT:
+            summary = f"제출서류 확인 가능: {raw_required_documents}"
+        else:
+            summary = "세부 내용은 원문에서 확인이 필요합니다."
+
+    eligibility = _safe_str(policy.get("eligibility"), "추가 확인 필요")
+    deadline_status = _safe_str(
+        policy.get("deadline_status") or metadata.get("deadline_status"),
+        "unknown",
+    )
+
+    application_end_date = (
+        policy.get("application_end_date")
+        or metadata.get("application_end_date")
+    )
+
+    is_expired = _safe_bool(
+        policy.get("is_expired", metadata.get("is_expired")),
+        default=False,
+    )
+
+    cautions = _limit_card_list(_build_cautions(policy))
+
+    badges = []
+
+    if domain:
+        badges.append(domain.split(">")[0].strip())
+
+    if eligibility:
+        badges.append(eligibility)
+
+    if is_expired or deadline_status == "expired":
+        badges.append("마감")
+    elif deadline_status == "open":
+        badges.append("신청 가능")
+    elif deadline_status == "unknown":
+        badges.append("확인 필요")
+
+    badges = list(dict.fromkeys([badge for badge in badges if badge]))
 
     return {
         "policy_id": item_id,
         "item_id": item_id,
         "title": title,
         "policy_name": title,
-        "source_category": _safe_str(
-            policy.get("source_category") or metadata.get("source_category")
-        ),
-        "domain": (
-            _safe_str(policy.get("domain"))
-            or _safe_str(metadata.get("domain"))
-            or None
-        ),
-        "summary": (
-            _safe_str(policy.get("summary"))
-            or _safe_str(metadata.get("summary"))
-            or _extract_field_from_text(text, "policy_summary")
-            or None
-        ),
-        "eligibility": _safe_str(policy.get("eligibility"), "추가 확인 필요"),
+        "source_category": source_category,
+        "domain": domain,
+        "summary": _truncate_for_card(summary, CARD_SUMMARY_MAX_CHARS),
+        "eligibility": eligibility,
         "score": _safe_float(policy.get("score")),
         "reason": _build_reason(policy),
         "match_reason": _build_reason(policy),
-        "support_content": support_content,
-        "application_period": application_period,
-        "required_documents": required_documents,
+
+        # 프론트 카드 표시용 핵심 필드
+        "display_summary": _truncate_for_card(summary, CARD_SUMMARY_MAX_CHARS),
+        "display_period": _normalize_display_text(raw_application_period),
+        "display_action_text": "신청/상세 보기" if action_url else "원문 확인 필요",
+        "badges": badges,
+        "action_url": action_url,
+        "has_detail_url": bool(action_url),
+
+        # 기존 호환 필드
+        "support_content": _truncate_for_card(raw_support_content, CARD_TEXT_MAX_CHARS),
+        "application_period": _normalize_display_text(raw_application_period),
+        "required_documents": _truncate_for_card(raw_required_documents, CARD_TEXT_MAX_CHARS),
         "source_url": source_url,
         "application_url": application_url,
         "needs_detail_check": _safe_bool(
             metadata.get("needs_detail_check", policy.get("needs_detail_check")),
             default=True,
         ),
-        "cautions": _build_cautions(policy),
-        "deadline_status": _safe_str(
-            policy.get("deadline_status") or metadata.get("deadline_status"),
-            "unknown",
-        ),
-        "application_end_date": (
-            policy.get("application_end_date")
-            or metadata.get("application_end_date")
-        ),
-        "is_expired": _safe_bool(
-            policy.get("is_expired", metadata.get("is_expired")),
-            default=False,
-        ),
+        "cautions": cautions,
+        "deadline_status": deadline_status,
+        "application_end_date": application_end_date,
+        "is_expired": is_expired,
     }
-
 
 def _build_reason(policy: dict[str, Any]) -> str:
     eligibility = _safe_str(policy.get("eligibility"), "추가 확인 필요")
@@ -339,14 +480,22 @@ def _build_empty_message_response() -> dict[str, Any]:
     }
 
 
-def _build_fallback_response(error_detail: str) -> dict[str, Any]:
+def _build_fallback_response(
+    error_code: str = ERROR_UNKNOWN,
+    user_message: str = FALLBACK_ANSWER,
+    detail: str = "",
+) -> dict[str, Any]:
     return {
-        "answer": FALLBACK_ANSWER,
+        "answer": user_message or FALLBACK_ANSWER,
         "recommendations": [],
         "sources": [],
-        "warnings": [f"AI 처리 중 오류가 발생했습니다: {error_detail}"],
-        "error": "AI_SERVICE_ERROR",
-        "meta": {},
+        "warnings": [user_message or FALLBACK_ANSWER],
+        "error": error_code,
+        "meta": {
+            "error_code": error_code,
+            "error_detail": _safe_str(detail),
+            "fallback_used": True,
+        },
     }
 
 
@@ -411,3 +560,41 @@ def _safe_tool_trace(value: Any) -> list[dict[str, Any]]:
             trace.append({"observation": str(item)})
 
     return trace
+
+def _normalize_display_text(value: Any, default: str = EMPTY_DISPLAY_TEXT) -> str:
+    text = _safe_str(value)
+
+    if not text:
+        return default
+
+    if text in {"None", "null", "unknown", "제공된 데이터에는 정보가 없습니다."}:
+        return default
+
+    return text
+
+
+def _truncate_for_card(value: Any, max_chars: int = CARD_TEXT_MAX_CHARS) -> str:
+    text = _normalize_display_text(value)
+
+    if text == EMPTY_DISPLAY_TEXT:
+        return text
+
+    text = " ".join(text.split())
+
+    if len(text) <= max_chars:
+        return text
+
+    return text[:max_chars].rstrip() + "..."
+
+
+def _limit_card_list(value: Any, max_items: int = CARD_LIST_MAX_ITEMS) -> list[str]:
+    items = _safe_list(value)
+    return items[:max_items]
+
+
+def _first_non_empty(*values: Any) -> str | None:
+    for value in values:
+        text = _safe_str(value)
+        if text:
+            return text
+    return None

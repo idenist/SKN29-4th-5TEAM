@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # 프로젝트 루트를 sys.path에 추가
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.backend_fastapi.db.graph_service import GraphService
+from backend.rag_engine.db.graph_service import GraphService
 
 
 def load_chunks(path: str, limit: int | None = None) -> list[dict]:

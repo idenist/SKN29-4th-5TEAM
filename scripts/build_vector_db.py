@@ -11,7 +11,7 @@ from tqdm import tqdm
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
-from backend.backend_fastapi.db.vector_store import YouthPolicyVectorStore
+from backend.rag_engine.db.vector_store import YouthPolicyVectorStore
 
 
 load_dotenv()

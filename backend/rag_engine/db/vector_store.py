@@ -203,10 +203,36 @@ def search_with_filters(
     query: str,
     user_age: int | None = None,
     user_region_code: str | None = None,
+    source_category: str | None = None,
     top_k: int = 5,
     fetch_k: int = 30,
 ):
-    raw_results = vector_store.search(query=query, top_k=fetch_k)
+    """
+    Vector DB 검색 후 age/region을 후처리로 적용한다.
+
+    6-2-2 개선:
+    source_category는 Chroma where 조건으로 우선 적용한다.
+    예: policy 질문이면 startup_notice가 먼저 섞이는 문제를 줄인다.
+    단, where 검색 결과가 아예 없으면 기존처럼 전체 검색으로 fallback한다.
+    """
+    where = None
+
+    if source_category:
+        where = {"source_category": source_category}
+
+    raw_results = vector_store.search(
+        query=query,
+        top_k=fetch_k,
+        where=where,
+    )
+
+    # source_category where 검색 결과가 없는 경우 전체 검색으로 fallback
+    if source_category and not raw_results:
+        raw_results = vector_store.search(
+            query=query,
+            top_k=fetch_k,
+            where=None,
+        )
 
     filtered = []
 
@@ -285,6 +311,7 @@ def search_policy_chunks(
         query=query,
         user_age=user_age,
         user_region_code=user_region_code,
+        source_category=source_category,
         top_k=fetch_k,
         fetch_k=fetch_k,
     )
