@@ -1,24 +1,13 @@
+# 저장 위치: backend/apps/community/views.py  (덮어쓰기)
+# 변경점: success_response/error_response 로컬 정의 제거 -> apps.common.responses에서 import
 from rest_framework import permissions, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.common.responses import success_response, error_response
 
 from .models import CommunityPost
 from .permissions import IsAuthorOrReadOnly
 from .serializers import CommunityPostDetailSerializer, CommunityPostListSerializer
-
-
-def success_response(data=None, message="", status_code=status.HTTP_200_OK):
-    return Response(
-        {"success": True, "data": data, "message": message, "error": None},
-        status=status_code,
-    )
-
-
-def error_response(message="", error=None, status_code=status.HTTP_400_BAD_REQUEST):
-    return Response(
-        {"success": False, "data": None, "message": message, "error": error},
-        status=status_code,
-    )
 
 
 # ---------------------------------------------------------

@@ -39,6 +39,10 @@ class Policy(models.Model):
     # 정책 전용 필드 (policies.json에서 join하여 보충 — 정승 담당)
     income_condition = models.TextField(blank=True, default="")
 
+    # 신청 대상 연령 (참여 대상 필터링용, null이면 연령 제한 없음으로 취급)
+    age_min = models.IntegerField(null=True, blank=True)
+    age_max = models.IntegerField(null=True, blank=True)
+
     # 신청 기간
     application_period_text = models.CharField(max_length=200, blank=True)
     application_start_date = models.DateField(null=True, blank=True)
