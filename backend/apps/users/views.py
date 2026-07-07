@@ -1,32 +1,22 @@
-import random
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.mail import send_mail
-from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import EmailVerificationCode, UserProfile
-<<<<<<< HEAD
-=======
 from .email_verification_utils import issue_verification_code
->>>>>>> 50c67f79ae02d80099f0dcb29ad86131bb44f18a
+from .models import EmailVerificationCode, UserProfile
 from .serializers import (
-    EmailVerificationConfirmSerializer,
-    EmailVerificationSendSerializer,
     LoginSerializer,
     MeSerializer,
     PasswordChangeSerializer,
-    PasswordResetSerializer,
-    SignupSerializer,
-    UserProfileSerializer,
-    SignupEmailSendSerializer,
-    SignupEmailConfirmSerializer,
     PasswordResetEmailSendSerializer,
     PasswordResetSerializer,
+    SignupEmailConfirmSerializer,
+    SignupEmailSendSerializer,
+    SignupSerializer,
+    UserProfileSerializer,
 )
 
 User = get_user_model()
@@ -46,24 +36,22 @@ def error_response(message="", error=None, status_code=status.HTTP_400_BAD_REQUE
     )
 
 
-<<<<<<< HEAD
-def normalize_email(email):
-    return (email or "").strip().lower()
-=======
-def _first_error(serializer):
+def first_error(serializer):
     first_field = next(iter(serializer.errors))
-    first_reason = str(serializer.errors[first_field][0])
+    value = serializer.errors[first_field]
+    if isinstance(value, list) and value:
+        first_reason = str(value[0])
+    elif isinstance(value, dict):
+        nested_field = next(iter(value))
+        nested_value = value[nested_field]
+        first_reason = str(nested_value[0] if isinstance(nested_value, list) and nested_value else nested_value)
+    else:
+        first_reason = str(value)
     return first_field, first_reason
 
 
-# ---------------------------------------------------------
-# 회원가입
-# ---------------------------------------------------------
-class SignupView(generics.CreateAPIView):
-    """
-    POST /api/auth/signup/
-    """
->>>>>>> 50c67f79ae02d80099f0dcb29ad86131bb44f18a
+def normalize_email(email):
+    return (email or "").strip().lower()
 
 
 def login_failure_cache_key(email):
@@ -87,7 +75,6 @@ def get_login_failure_count(email):
 def record_login_failure(email):
     if not email:
         return 0
-
     count = get_login_failure_count(email) + 1
     cache.set(login_failure_cache_key(email), count, get_login_failure_timeout())
     return count
@@ -115,36 +102,29 @@ def password_reset_required_response(email):
     )
 
 
-def create_verification_code(email, purpose):
-    code = f"{random.randint(0, 999999):06d}"
-    expires_at = timezone.now() + timezone.timedelta(
-        minutes=getattr(settings, "EMAIL_VERIFICATION_EXPIRE_MINUTES", 10)
-    )
-    return EmailVerificationCode.objects.create(
-        email=email,
-        code=code,
-        purpose=purpose,
-        expires_at=expires_at,
-    )
+class SignupEmailSendView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SignupEmailSendSerializer(data=request.data)
+        if not serializer.is_valid():
+            field, reason = first_error(serializer)
+            return error_response("이메일을 확인해 주세요.", {"field": field, "reason": reason})
+
+        issue_verification_code(serializer.validated_data["email"], EmailVerificationCode.Purpose.SIGNUP)
+        return success_response(message="인증번호를 이메일로 보냈습니다.")
 
 
-def send_verification_email(email, code, purpose):
-    subject_map = {
-        EmailVerificationCode.PURPOSE_SIGNUP: "[이젠, 안쉼] 회원가입 인증번호",
-        EmailVerificationCode.PURPOSE_PASSWORD_RESET: "[이젠, 안쉼] 비밀번호 재설정 인증번호",
-    }
-    subject = subject_map[purpose]
-    message = (
-        f"인증번호는 {code} 입니다.\n"
-        f"{getattr(settings, 'EMAIL_VERIFICATION_EXPIRE_MINUTES', 10)}분 안에 입력해 주세요."
-    )
-    send_mail(
-        subject=subject,
-        message=message,
-        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-        recipient_list=[email],
-        fail_silently=False,
-    )
+class SignupEmailConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = SignupEmailConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            field, reason = first_error(serializer)
+            return error_response("인증번호를 확인해 주세요.", {"field": field, "reason": reason})
+
+        return success_response(message="이메일 인증이 완료되었습니다.")
 
 
 class SignupView(generics.CreateAPIView):
@@ -154,11 +134,8 @@ class SignupView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
+            field, reason = first_error(serializer)
+            return error_response("입력값이 올바르지 않습니다.", {"field": field, "reason": reason})
 
         user = serializer.save()
         return success_response(
@@ -166,153 +143,6 @@ class SignupView(generics.CreateAPIView):
             message="회원가입이 완료되었습니다.",
             status_code=status.HTTP_201_CREATED,
         )
-
-
-<<<<<<< HEAD
-class SignupEmailSendView(APIView):
-=======
-# ---------------------------------------------------------
-# 회원가입 이메일 인증
-# ---------------------------------------------------------
-class SignupEmailSendView(APIView):
-    """
-    POST /api/auth/signup/email/send/
-    """
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = SignupEmailSendSerializer(data=request.data)
-        if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
-        issue_verification_code(
-            serializer.validated_data["email"], EmailVerificationCode.Purpose.SIGNUP
-        )
-        return success_response(message="인증번호가 발송되었습니다.")
-
-
-class SignupEmailConfirmView(APIView):
-    """
-    POST /api/auth/signup/email/confirm/
-    """
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = SignupEmailConfirmSerializer(data=request.data)
-        if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
-        return success_response(message="인증되었습니다.")
-
-
-# ---------------------------------------------------------
-# 비밀번호 찾기
-# ---------------------------------------------------------
-class PasswordResetEmailSendView(APIView):
-    """
-    POST /api/auth/password-reset/email/send/
-    """
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = PasswordResetEmailSendSerializer(data=request.data)
-        if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
-        issue_verification_code(
-            serializer.validated_data["email"],
-            EmailVerificationCode.Purpose.PASSWORD_RESET,
-        )
-        return success_response(message="인증번호가 발송되었습니다.")
-
-
-class PasswordResetView(APIView):
-    """
-    POST /api/auth/password-reset/
-    """
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = PasswordResetSerializer(data=request.data)
-        if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
-        serializer.save()
-        return success_response(message="비밀번호가 변경되었습니다.")
-
-
-# ---------------------------------------------------------
-# 로그인
-# ---------------------------------------------------------
-class LoginView(APIView):
-    """
-    POST /api/auth/login/
-    """
-
->>>>>>> 50c67f79ae02d80099f0dcb29ad86131bb44f18a
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = EmailVerificationSendSerializer(data=request.data)
-        if not serializer.is_valid():
-            return error_response(message="이메일을 확인해 주세요.", error=serializer.errors)
-
-        email = serializer.validated_data["email"]
-        if User.objects.filter(email=email).exists():
-            return error_response(
-                message="이미 사용 중인 이메일입니다.",
-                error={"field": "email", "reason": "이미 사용 중인 이메일입니다."},
-            )
-
-        verification = create_verification_code(email, EmailVerificationCode.PURPOSE_SIGNUP)
-        send_verification_email(email, verification.code, EmailVerificationCode.PURPOSE_SIGNUP)
-        return success_response(message="인증번호를 이메일로 보냈습니다.")
-
-
-class SignupEmailConfirmView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = EmailVerificationConfirmSerializer(data=request.data)
-        if not serializer.is_valid():
-            return error_response(message="인증번호를 확인해 주세요.", error=serializer.errors)
-
-        email = serializer.validated_data["email"]
-        code = serializer.validated_data["code"]
-        verification = (
-            EmailVerificationCode.objects.filter(
-                email=email,
-                code=code,
-                purpose=EmailVerificationCode.PURPOSE_SIGNUP,
-                is_used=False,
-            )
-            .order_by("-created_at")
-            .first()
-        )
-        if verification is None or verification.is_expired():
-            return error_response(
-                message="인증번호가 올바르지 않거나 만료되었습니다.",
-                error={"field": "verification_code", "reason": "인증번호가 올바르지 않거나 만료되었습니다."},
-            )
-
-        verification.mark_verified()
-        return success_response(message="이메일 인증이 완료되었습니다.")
 
 
 class LoginView(APIView):
@@ -352,19 +182,15 @@ class PasswordResetEmailSendView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = EmailVerificationSendSerializer(data=request.data)
+        serializer = PasswordResetEmailSendSerializer(data=request.data)
         if not serializer.is_valid():
-            return error_response(message="이메일을 확인해 주세요.", error=serializer.errors)
+            field, reason = first_error(serializer)
+            return error_response("이메일을 확인해 주세요.", {"field": field, "reason": reason})
 
-        email = serializer.validated_data["email"]
-        if not User.objects.filter(email=email).exists():
-            return error_response(
-                message="가입된 이메일을 찾을 수 없습니다.",
-                error={"field": "email", "reason": "가입된 이메일을 찾을 수 없습니다."},
-            )
-
-        verification = create_verification_code(email, EmailVerificationCode.PURPOSE_PASSWORD_RESET)
-        send_verification_email(email, verification.code, EmailVerificationCode.PURPOSE_PASSWORD_RESET)
+        issue_verification_code(
+            serializer.validated_data["email"],
+            EmailVerificationCode.Purpose.PASSWORD_RESET,
+        )
         return success_response(message="비밀번호 재설정 인증번호를 이메일로 보냈습니다.")
 
 
@@ -374,12 +200,8 @@ class PasswordResetView(APIView):
     def post(self, request):
         serializer = PasswordResetSerializer(data=request.data)
         if not serializer.is_valid():
-            first_field = next(iter(serializer.errors))
-            first_reason = str(serializer.errors[first_field][0])
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
+            field, reason = first_error(serializer)
+            return error_response("입력값이 올바르지 않습니다.", {"field": field, "reason": reason})
 
         serializer.save()
         clear_login_failures(serializer.validated_data["email"])
@@ -392,12 +214,8 @@ class PasswordChangeView(APIView):
     def post(self, request):
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         if not serializer.is_valid():
-            first_field = next(iter(serializer.errors))
-            first_reason = str(serializer.errors[first_field][0])
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
+            field, reason = first_error(serializer)
+            return error_response("입력값이 올바르지 않습니다.", {"field": field, "reason": reason})
 
         serializer.save()
         clear_login_failures(request.user.email)
@@ -428,11 +246,8 @@ class ProfileUpdateView(generics.UpdateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if not serializer.is_valid():
-            first_field, first_reason = _first_error(serializer)
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
+            field, reason = first_error(serializer)
+            return error_response("입력값이 올바르지 않습니다.", {"field": field, "reason": reason})
 
         serializer.save()
         return success_response(data=serializer.data, message="프로필이 수정되었습니다.")
