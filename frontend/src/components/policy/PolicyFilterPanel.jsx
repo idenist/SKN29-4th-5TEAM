@@ -1,6 +1,6 @@
+import { useEffect, useState } from 'react';
 import Button from '../common/Button.jsx';
 import Select from '../common/Select.jsx';
-import Card from '../common/Card.jsx';
 
 const filterOptions = {
   category: ['전체', '주거', '금융', '취업', '교육', '창업'],
@@ -14,48 +14,103 @@ function toSelectOptions(values) {
 }
 
 export default function PolicyFilterPanel({ filters, onChange, onReset }) {
-  const updateFilter = (key, value) => {
-    onChange?.({ ...filters, [key]: value || '전체' });
+  const [draftFilters, setDraftFilters] = useState(filters);
+
+  useEffect(() => {
+    setDraftFilters(filters);
+  }, [filters]);
+
+  const updateDraft = (key, value) => {
+    setDraftFilters((current) => ({ ...current, [key]: value || '전체' }));
+  };
+
+  const applyFilters = () => {
+    onChange?.(draftFilters);
+  };
+
+  const resetFilters = () => {
+    setDraftFilters({
+      age: '',
+      category: '전체',
+      region: '전체',
+      status: '전체',
+      income: '전체'
+    });
+    onReset?.();
   };
 
   return (
-    <Card className="policy-filter-panel">
-      <header className="policy-filter-header">
-        <h2>필터</h2>
-        <Button type="button" variant="ghost" size="sm" onClick={onReset}>
+    <aside className="policy-condition-sidebar" aria-label="정책 조건 입력 필터">
+      <div className="policy-condition-title-row">
+        <h2 className="policy-condition-title">조건 입력 필터</h2>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="policy-condition-reset"
+          onClick={resetFilters}
+        >
           초기화
         </Button>
-      </header>
-      <div className="policy-filter-fields">
+      </div>
+
+      <div className="policy-condition-card">
+        <div className="policy-condition-age-field">
+          <label htmlFor="policy-age-filter">나이</label>
+          <input
+            id="policy-age-filter"
+            type="number"
+            min="0"
+            max="99"
+            inputMode="numeric"
+            value={draftFilters.age}
+            onChange={(event) => updateDraft('age', event.target.value)}
+            placeholder="나이 입력"
+          />
+        </div>
         <Select
           label="분야"
-          value={filters.category}
+          value={draftFilters.category}
           options={toSelectOptions(filterOptions.category)}
           placeholder=""
-          onChange={(event) => updateFilter('category', event.target.value)}
+          onChange={(event) => updateDraft('category', event.target.value)}
+          className="policy-condition-select"
         />
         <Select
           label="지역"
-          value={filters.region}
+          value={draftFilters.region}
           options={toSelectOptions(filterOptions.region)}
           placeholder=""
-          onChange={(event) => updateFilter('region', event.target.value)}
+          onChange={(event) => updateDraft('region', event.target.value)}
+          className="policy-condition-select"
         />
         <Select
           label="상태"
-          value={filters.status}
+          value={draftFilters.status}
           options={toSelectOptions(filterOptions.status)}
           placeholder=""
-          onChange={(event) => updateFilter('status', event.target.value)}
+          onChange={(event) => updateDraft('status', event.target.value)}
+          className="policy-condition-select"
         />
         <Select
           label="소득조건"
-          value={filters.income}
+          value={draftFilters.income}
           options={toSelectOptions(filterOptions.income)}
           placeholder=""
-          onChange={(event) => updateFilter('income', event.target.value)}
+          onChange={(event) => updateDraft('income', event.target.value)}
+          className="policy-condition-select"
         />
+
+        <Button type="button" fullWidth className="policy-condition-apply" onClick={applyFilters}>
+          조건 적용
+        </Button>
       </div>
-    </Card>
+
+      <div className="policy-condition-tip">
+        <strong>조건 입력 팁</strong>
+        <p>· 먼저 위에서 궁금한 정책을 검색해 주세요.</p>
+        <p>· 더 정확한 결과가 필요할 때만 분야, 지역, 상태, 소득조건을 추가로 적용해 주세요.</p>
+      </div>
+    </aside>
   );
 }

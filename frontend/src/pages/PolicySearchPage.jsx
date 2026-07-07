@@ -14,6 +14,7 @@ import { usePolicyList } from '../hooks/usePolicies.js';
 const PAGE_SIZE = 4;
 
 const initialFilters = {
+  age: '',
   category: '전체',
   region: '전체',
   status: '전체',
@@ -22,6 +23,7 @@ const initialFilters = {
 
 function isDefaultFilters(filters) {
   return (
+    !filters.age &&
     filters.category === initialFilters.category &&
     filters.region === initialFilters.region &&
     filters.status === initialFilters.status &&
@@ -49,11 +51,12 @@ export default function PolicySearchPage() {
   const queryParams = useMemo(
     () => ({
       keyword: submittedKeyword,
+      age: filters.age,
       region: filters.region,
       sourceCategory: filters.category,
       enabled: hasSearchCondition
     }),
-    [submittedKeyword, filters.category, filters.region, hasSearchCondition]
+    [submittedKeyword, filters.age, filters.category, filters.region, hasSearchCondition]
   );
 
   const { policies, isLoading, error, refetch } = usePolicyList(queryParams);
@@ -104,7 +107,7 @@ export default function PolicySearchPage() {
       <PageHeader
         kicker="Policy Search"
         title="청년 정책 검색"
-        description="검색어, 분야, 지역, 상태, 소득조건을 조합해 정책을 찾아볼 수 있습니다."
+        description="검색어, 나이, 분야, 지역, 상태, 소득조건을 조합해 정책을 찾아볼 수 있습니다."
       />
 
       <div className="policy-search-layout">
@@ -124,12 +127,12 @@ export default function PolicySearchPage() {
               {hasSearchCondition ? (
                 <>
                   <strong>{filteredPolicies.length}개 정책</strong>
-                  <span> 이 조건에 맞습니다.</span>
+                  <span>이 조건에 맞습니다.</span>
                 </>
               ) : (
                 <>
                   <strong>검색 결과 없음</strong>
-                  <span> 검색어를 입력하거나 필터를 선택해 주세요.</span>
+                  <span>검색어를 입력하거나 필터를 선택해 주세요.</span>
                 </>
               )}
             </div>
@@ -143,7 +146,7 @@ export default function PolicySearchPage() {
           {!hasSearchCondition ? (
             <EmptyState
               title="검색 결과가 없습니다"
-              description="검색어를 입력하거나 필터 조건을 선택하면 정책을 찾아볼 수 있습니다."
+              description="검색어를 입력하거나 조건 입력 필터를 적용하면 정책을 찾아볼 수 있습니다."
             />
           ) : isLoading ? (
             <Spinner label="정책을 불러오는 중..." />
