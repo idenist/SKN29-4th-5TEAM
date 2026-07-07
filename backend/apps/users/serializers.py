@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import UserProfile
+from .models import EmailVerificationCode, UserProfile
+from .email_verification_utils import consume_verified_code, verify_code
 
 User = get_user_model()
 
@@ -9,10 +11,11 @@ User = get_user_model()
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
+    verification_code = serializers.CharField(write_only=True, max_length=6, min_length=6)
 
     class Meta:
         model = User
-        fields = ["email", "username", "password", "password_confirm"]
+        fields = ["email", "username", "password", "password_confirm", "verification_code"]
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -24,10 +27,19 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password_confirm": "비밀번호가 일치하지 않습니다."}
             )
+
+        ok = consume_verified_code(
+            attrs["email"], attrs["verification_code"], EmailVerificationCode.Purpose.SIGNUP
+        )
+        if not ok:
+            raise serializers.ValidationError(
+                {"verification_code": "이메일 인증이 완료되지 않았거나 인증번호가 만료되었습니다."}
+            )
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
+        validated_data.pop("verification_code")
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
@@ -88,3 +100,85 @@ class MeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "email", "username", "profile", "date_joined"]
+
+
+# ---------------------------------------------------------
+# 회원가입 이메일 인증
+# ---------------------------------------------------------
+class SignupEmailSendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("이미 가입된 이메일입니다.")
+        return value
+
+
+class SignupEmailConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6, min_length=6)
+
+    def validate(self, attrs):
+        verification = verify_code(
+            attrs["email"], attrs["code"], EmailVerificationCode.Purpose.SIGNUP
+        )
+        if verification is None:
+            raise serializers.ValidationError("인증번호가 올바르지 않거나 만료되었습니다.")
+        return attrs
+
+
+# ---------------------------------------------------------
+# 비밀번호 찾기
+# ---------------------------------------------------------
+class PasswordResetEmailSendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("가입되지 않은 이메일입니다.")
+        return value
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6, min_length=6)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("가입되지 않은 이메일입니다.")
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password_confirm"]:
+            raise serializers.ValidationError(
+                {"new_password_confirm": "비밀번호가 일치하지 않습니다."}
+            )
+        validate_password(attrs["new_password"])
+        return attrs
+
+    def save(self, **kwargs):
+        email = self.validated_data["email"]
+        code = self.validated_data["code"]
+
+        verification = EmailVerificationCode.objects.filter(
+            email=email,
+            code=code,
+            purpose=EmailVerificationCode.Purpose.PASSWORD_RESET,
+            is_used=False,
+        ).order_by("-created_at").first()
+
+        if verification is None or verification.is_expired():
+            raise serializers.ValidationError(
+                {"code": "인증번호가 올바르지 않거나 만료되었습니다."}
+            )
+
+        verification.is_used = True
+        verification.is_verified = True
+        verification.save(update_fields=["is_used", "is_verified"])
+
+        user = User.objects.get(email=email)
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user

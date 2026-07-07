@@ -1,34 +1,59 @@
 from rest_framework import serializers
 
-from .models import CommunityPost
+from .models import Comment, CommunityPost
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "post",
+            "author_name",
+            "content",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "post", "author_name", "created_at", "updated_at"]
 
 
 class CommunityPostListSerializer(serializers.ModelSerializer):
-    """게시글 목록용 - content는 미리보기만 잘라서 보여준다."""
+    """게시글 목록용 - author_email 대신 author_name 노출"""
 
-    author_email = serializers.CharField(source="author.email", read_only=True)
-    content_preview = serializers.SerializerMethodField()
+    author_name = serializers.CharField(read_only=True)
+    category_label = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
+    comment_count = serializers.SerializerMethodField()
 
     class Meta:
         model = CommunityPost
         fields = [
             "id",
             "title",
-            "content_preview",
-            "author_email",
+            "author_name",
+            "category",
+            "category_label",
             "view_count",
+            "comment_count",
             "created_at",
+            "updated_at",
         ]
-        read_only_fields = fields
 
-    def get_content_preview(self, obj):
-        return obj.content[:100]
+    def get_comment_count(self, obj):
+        return obj.comments.count()
 
 
 class CommunityPostDetailSerializer(serializers.ModelSerializer):
-    """게시글 상세 조회/작성/수정용."""
+    """게시글 상세용 - author_email 대신 author_name 노출"""
 
-    author_email = serializers.CharField(source="author.email", read_only=True)
+    author_name = serializers.CharField(read_only=True)
+    category_label = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = CommunityPost
@@ -36,24 +61,27 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "content",
-            "author",
-            "author_email",
+            "author_name",
+            "category",
+            "category_label",
             "view_count",
+            "comments",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "author", "author_email", "view_count", "created_at", "updated_at"]
 
-    def validate_title(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("제목을 입력해주세요.")
+
+class CommunityPostWriteSerializer(serializers.ModelSerializer):
+    """게시글 생성/수정용 - category를 입력받음"""
+
+    class Meta:
+        model = CommunityPost
+        fields = ["title", "content", "category"]
+
+    def validate_category(self, value):
+        valid_values = [choice for choice, _ in CommunityPost.Category.choices]
+        if value not in valid_values:
+            raise serializers.ValidationError(
+                f"category는 {valid_values} 중 하나여야 합니다."
+            )
         return value
-
-    def validate_content(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("내용을 입력해주세요.")
-        return value
-
-    def create(self, validated_data):
-        validated_data["author"] = self.context["request"].user
-        return super().create(validated_data)

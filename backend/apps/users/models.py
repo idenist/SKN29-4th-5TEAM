@@ -45,3 +45,36 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.email}의 프로필"
+    
+
+class EmailVerificationCode(models.Model):
+    class Purpose(models.TextChoices):
+        SIGNUP = "signup", "회원가입"
+        PASSWORD_RESET = "password_reset", "비밀번호 재설정"
+ 
+    email = models.EmailField(db_index=True)
+    code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=20, choices=Purpose.choices)
+    is_verified = models.BooleanField(default=False)  # confirm 단계 통과 여부
+    is_used = models.BooleanField(default=False)  # 실제 가입/비밀번호변경에 사용됨
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        indexes = [
+            models.Index(fields=["email", "purpose", "code"]),
+        ]
+ 
+    def is_expired(self) -> bool:
+        return timezone.now() >= self.expires_at
+ 
+    @classmethod
+    def expiry_minutes(cls) -> int:
+        return getattr(settings, "EMAIL_VERIFICATION_EXPIRE_MINUTES", 10)
+ 
+    @classmethod
+    def new_expiry(cls):
+        return timezone.now() + timedelta(minutes=cls.expiry_minutes())
+ 
+    def __str__(self):
+        return f"{self.email} [{self.purpose}] {self.code}"

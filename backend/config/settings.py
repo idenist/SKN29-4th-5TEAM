@@ -196,3 +196,22 @@ AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")
 # 업로드 검증 기준 (지침서 6.10)
 PROFILE_IMAGE_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
 PROFILE_IMAGE_MAX_SIZE_MB = 5
+
+
+# ------------------------------------------------------------------
+# EMAIL 처리
+# ------------------------------------------------------------------
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+ 
+# 인증번호 유효시간(분)
+EMAIL_VERIFICATION_EXPIRE_MINUTES = int(
+    os.environ.get("EMAIL_VERIFICATION_EXPIRE_MINUTES", 10)
+)

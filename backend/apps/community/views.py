@@ -1,139 +1,69 @@
-from django.db.models import F
-from django.utils import timezone
-from rest_framework import permissions, status
-from rest_framework.views import APIView
+from rest_framework import permissions, viewsets
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
-from apps.common.responses import success_response, error_response
-
-from .models import CommunityPost
+from .models import Comment, CommunityPost
 from .permissions import IsAuthorOrReadOnly
-from .serializers import CommunityPostDetailSerializer, CommunityPostListSerializer
-
-VIEW_COUNT_DEBOUNCE_SECONDS = 5
-VIEWED_POSTS_SESSION_KEY = "community_viewed_posts"
-
-
-def should_increment_view_count(request, post_id):
-    viewed_posts = request.session.get(VIEWED_POSTS_SESSION_KEY, {})
-    now = timezone.now().timestamp()
-    post_key = str(post_id)
-    last_viewed_at = viewed_posts.get(post_key)
-
-    try:
-        if last_viewed_at and now - float(last_viewed_at) < VIEW_COUNT_DEBOUNCE_SECONDS:
-            return False
-    except (TypeError, ValueError):
-        pass
-
-    viewed_posts[post_key] = now
-    request.session[VIEWED_POSTS_SESSION_KEY] = viewed_posts
-    request.session.modified = True
-    return True
+from .serializers import (
+    CommentSerializer,
+    CommunityPostDetailSerializer,
+    CommunityPostListSerializer,
+    CommunityPostWriteSerializer,
+)
 
 
-# ---------------------------------------------------------
-# 게시글 목록 조회 / 작성
-# ---------------------------------------------------------
-class CommunityPostListCreateView(APIView):
-    """
-    GET  /api/community/posts/   - 목록 조회 (비로그인 가능)
-    POST /api/community/posts/   - 게시글 작성 (로그인 필요)
-    """
+class CommunityPostViewSet(viewsets.ModelViewSet):
+    queryset = CommunityPost.objects.select_related("author").prefetch_related(
+        "comments__author"
+    )
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
-    def get_permissions(self):
-        if self.request.method == "POST":
-            return [permissions.IsAuthenticated()]
-        return [permissions.AllowAny()]
+    def get_serializer_class(self):
+        if self.action == "list":
+            return CommunityPostListSerializer
+        if self.action == "retrieve":
+            return CommunityPostDetailSerializer
+        return CommunityPostWriteSerializer
 
-    def get(self, request):
-        posts = CommunityPost.objects.all()
-        serializer = CommunityPostListSerializer(posts, many=True)
-        return success_response(data=serializer.data, message="게시글 목록을 조회했습니다.")
+    def get_queryset(self):
+        qs = super().get_queryset()
+        category = self.request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+        return qs
 
-    def post(self, request):
-        serializer = CommunityPostDetailSerializer(
-            data=request.data, context={"request": request}
-        )
-        if not serializer.is_valid():
-            first_field = next(iter(serializer.errors))
-            first_reason = str(serializer.errors[first_field][0])
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
-        post = serializer.save()
-        return success_response(
-            data=CommunityPostDetailSerializer(post).data,
-            message="게시글이 작성되었습니다.",
-            status_code=status.HTTP_201_CREATED,
-        )
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-
-# ---------------------------------------------------------
-# 게시글 상세 조회 / 수정 / 삭제
-# ---------------------------------------------------------
-class CommunityPostDetailView(APIView):
-    """
-    GET    /api/community/posts/{post_id}/   - 상세 조회 (비로그인 가능, 조회수 +1)
-    PATCH  /api/community/posts/{post_id}/   - 수정 (작성자 본인만)
-    DELETE /api/community/posts/{post_id}/   - 삭제 (작성자 본인 또는 관리자)
-    """
-
-    permission_classes = [IsAuthorOrReadOnly]
-
-    def get_object(self, post_id):
-        try:
-            return CommunityPost.objects.get(id=post_id)
-        except CommunityPost.DoesNotExist:
-            return None
-
-    def get(self, request, post_id):
-        post = self.get_object(post_id)
-        if post is None:
-            return error_response(
-                message="게시글을 찾을 수 없습니다.",
-                error="NOT_FOUND",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-        if should_increment_view_count(request, post.id):
-            CommunityPost.objects.filter(id=post.id).update(view_count=F("view_count") + 1)
-            post.refresh_from_db(fields=["view_count"])
-
-        serializer = CommunityPostDetailSerializer(post)
-        return success_response(data=serializer.data, message="게시글을 조회했습니다.")
-
-    def patch(self, request, post_id):
-        post = self.get_object(post_id)
-        if post is None:
-            return error_response(
-                message="게시글을 찾을 수 없습니다.",
-                error="NOT_FOUND",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-        self.check_object_permissions(request, post)
-
-        serializer = CommunityPostDetailSerializer(
-            post, data=request.data, partial=True, context={"request": request}
-        )
-        if not serializer.is_valid():
-            first_field = next(iter(serializer.errors))
-            first_reason = str(serializer.errors[first_field][0])
-            return error_response(
-                message="입력값이 올바르지 않습니다.",
-                error={"field": first_field, "reason": first_reason},
-            )
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        user = self.request.user
+        if instance.author_id != user.id and not user.is_staff:
+            raise PermissionDenied("작성자만 수정할 수 있습니다.")
         serializer.save()
-        return success_response(data=serializer.data, message="게시글이 수정되었습니다.")
 
-    def delete(self, request, post_id):
-        post = self.get_object(post_id)
-        if post is None:
-            return error_response(
-                message="게시글을 찾을 수 없습니다.",
-                error="NOT_FOUND",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-        self.check_object_permissions(request, post)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.view_count += 1
+        instance.save(update_fields=["view_count"])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
-        post.delete()
-        return success_response(message="게시글이 삭제되었습니다.")
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    /api/community/posts/{post_id}/comments/
+    urls.py에서 post_id를 kwarg로 받도록 nested route로 연결해주세요.
+    """
+
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    http_method_names = ["get", "post", "delete"]  # 댓글 수정은 범위 밖, 필요 시 put/patch 추가
+
+    def get_queryset(self):
+        return Comment.objects.filter(
+            post_id=self.kwargs["post_id"]
+        ).select_related("author")
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, post_id=self.kwargs["post_id"])
