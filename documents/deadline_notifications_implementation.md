@@ -323,4 +323,3 @@ docker compose exec backend python manage.py generate\_deadline\_notifications
 
 
 사용자가 관심 정책으로 스크랩한 정책 중 마감임박 상태인 정책을 찾아, 중복 없이 `deadline\_soon` 알림을 생성하는 백엔드 로직을 구현했다.
-
