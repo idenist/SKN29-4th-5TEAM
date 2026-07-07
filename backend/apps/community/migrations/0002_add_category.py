@@ -2,12 +2,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    """
-    NOTE: dependencies의 '0001_initial'은 실제 프로젝트의
-    최신 community 마이그레이션 파일명으로 바꿔주세요.
-    (예: python manage.py showmigrations community 로 확인)
-    """
-
     dependencies = [
         ("community", "0001_initial"),
     ]
@@ -26,6 +20,7 @@ class Migration(migrations.Migration):
                     ("startup", "창업"),
                     ("etc", "기타"),
                 ],
+                db_index=True,
                 default="general",
                 max_length=20,
             ),

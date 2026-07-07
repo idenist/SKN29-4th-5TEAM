@@ -2,23 +2,23 @@
 Django settings for SKN29-4TH-5TEAM backend.
 """
 
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 import os
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
+
 # ------------------------------------------------------------------
 # Core
 # ------------------------------------------------------------------
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
-
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
@@ -33,16 +33,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # 3rd party
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
-
-    # mypage
     "apps.mypage",
-
-    # local apps (apps/ 패키지 하위, import 경로 그대로 사용)
     "apps.users",
     "apps.policies",
     "apps.notifications",
@@ -51,7 +45,6 @@ INSTALLED_APPS = [
     "apps.recommendations",
     "apps.news",
     "apps.uploads",
-    
 ]
 
 MIDDLEWARE = [
@@ -88,7 +81,7 @@ ASGI_APPLICATION = "config.asgi.application"
 
 
 # ------------------------------------------------------------------
-# Database (PostgreSQL)
+# Database
 # ------------------------------------------------------------------
 
 DATABASES = {
@@ -97,10 +90,7 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "ezen_anshim"),
         "USER": os.getenv("DB_USER", "postgres"),
         "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
-        "HOST": os.getenv(
-            "DB_HOST",
-            "db" if os.path.exists("/.dockerenv") else "localhost"
-        ),
+        "HOST": os.getenv("DB_HOST", "db" if os.path.exists("/.dockerenv") else "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
@@ -135,8 +125,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# 업로드 파일 크기 제한 (프로필 이미지 등, 지침서 6.10 대비)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -165,19 +154,14 @@ SIMPLE_JWT = {
 
 
 # ------------------------------------------------------------------
-# CORS (React 프론트, localhost:3000 기준. 배포 시 .env로 교체)
+# CORS / CSRF
 # ------------------------------------------------------------------
 
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS",
     "http://localhost:3000",
 ).split(",")
-
 CORS_ALLOW_CREDENTIALS = True
-
-# ------------------------------------------------------------------
-# CSRF (Django admin 등 세션 기반 로그인용. 배포 시 .env로 실제 도메인 추가)
-# ------------------------------------------------------------------
 
 CSRF_TRUSTED_ORIGINS = os.getenv(
     "CSRF_TRUSTED_ORIGINS",
@@ -186,20 +170,19 @@ CSRF_TRUSTED_ORIGINS = os.getenv(
 
 
 # ------------------------------------------------------------------
-# AWS S3 (프로필 이미지 업로드용, 정승이 버킷/IAM 준비)
+# Uploads
 # ------------------------------------------------------------------
+
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")
 
-# 업로드 검증 기준 (지침서 6.10)
 PROFILE_IMAGE_ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
 PROFILE_IMAGE_MAX_SIZE_MB = 5
 
 
 # ------------------------------------------------------------------
-<<<<<<< HEAD
 # Email
 # ------------------------------------------------------------------
 
@@ -222,21 +205,3 @@ EMAIL_VERIFICATION_EXPIRE_MINUTES = int(os.getenv("EMAIL_VERIFICATION_EXPIRE_MIN
 
 LOGIN_FAILURE_LIMIT = int(os.getenv("LOGIN_FAILURE_LIMIT", "5"))
 LOGIN_FAILURE_WINDOW_MINUTES = int(os.getenv("LOGIN_FAILURE_WINDOW_MINUTES", "30"))
-=======
-# EMAIL 처리
-# ------------------------------------------------------------------
-EMAIL_BACKEND = os.environ.get(
-    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
-)
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
- 
-# 인증번호 유효시간(분)
-EMAIL_VERIFICATION_EXPIRE_MINUTES = int(
-    os.environ.get("EMAIL_VERIFICATION_EXPIRE_MINUTES", 10)
-)
->>>>>>> 50c67f79ae02d80099f0dcb29ad86131bb44f18a

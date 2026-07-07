@@ -21,8 +21,12 @@ function validate(values) {
   if (!values.email.trim()) errors.email = '이메일을 입력해 주세요.';
   if (!values.code.trim()) errors.code = '인증번호를 입력해 주세요.';
   if (!values.newPassword) errors.newPassword = '새 비밀번호를 입력해 주세요.';
-  if (values.newPassword && values.newPassword.length < 8) errors.newPassword = '비밀번호는 8자 이상이어야 합니다.';
-  if (!values.newPasswordConfirm) errors.newPasswordConfirm = '새 비밀번호 확인을 입력해 주세요.';
+  if (values.newPassword && values.newPassword.length < 8) {
+    errors.newPassword = '비밀번호는 8자 이상이어야 합니다.';
+  }
+  if (!values.newPasswordConfirm) {
+    errors.newPasswordConfirm = '새 비밀번호 확인을 입력해 주세요.';
+  }
   if (
     values.newPassword &&
     values.newPasswordConfirm &&
@@ -35,10 +39,11 @@ function validate(values) {
 }
 
 function getErrorMessage(error, fallback) {
-  const apiMessage = error?.responseData?.message;
   const apiReason = error?.responseData?.error?.reason;
+  const apiMessage = error?.responseData?.message;
+  const plainMessage = error?.response?.data?.detail || error?.message;
 
-  return apiReason || apiMessage || fallback;
+  return apiReason || apiMessage || plainMessage || fallback;
 }
 
 export default function ForgotPasswordPage() {
