@@ -174,3 +174,27 @@ class ViewedPolicy(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.policy.title}"
+
+class PopularSearchKeyword(models.Model):
+    """
+    인기 검색어 익명 집계 모델.
+    개인 식별 정보(user_id, email, ip 등)는 저장하지 않고 keyword/count만 저장한다.
+    """
+
+    keyword = models.CharField(max_length=50, unique=True, db_index=True)
+    count = models.PositiveIntegerField(default=0)
+    last_searched_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "popular_search_keywords"
+        verbose_name = "인기 검색어"
+        verbose_name_plural = "인기 검색어"
+        ordering = ["-count", "keyword"]
+        indexes = [
+            models.Index(fields=["-count", "keyword"]),
+        ]
+
+    def __str__(self):
+        return f"{self.keyword} ({self.count})"
