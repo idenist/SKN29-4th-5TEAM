@@ -126,6 +126,116 @@
   font-weight: 800;
 }
 
+.video-theater-trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  background: rgb(15 23 42 / 0);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  opacity: 0;
+  cursor: pointer;
+  transition: background 180ms ease, opacity 180ms ease;
+}
+
+.video-theater-trigger:hover,
+.video-theater-trigger:focus-visible {
+  background: rgb(15 23 42 / 0.52);
+  opacity: 1;
+  outline: 0;
+}
+
+.video-theater-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: rgb(2 6 23 / 0.88);
+  backdrop-filter: blur(6px);
+}
+
+.video-theater-dialog {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  width: min(100%, 1180px);
+  color: #fff;
+}
+
+.video-theater-player {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 18px;
+  background: #000;
+  box-shadow: 0 28px 80px rgb(0 0 0 / 0.46);
+  aspect-ratio: 16 / 9;
+}
+
+.video-theater-player iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-theater-close {
+  position: absolute;
+  top: -54px;
+  right: 0;
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.video-theater-close:hover {
+  background: rgb(255 255 255 / 0.2);
+  transform: translateY(-1px);
+}
+
+.video-theater-info {
+  display: grid;
+  gap: 8px;
+  max-width: 900px;
+}
+
+.video-theater-info h2,
+.video-theater-info p {
+  margin: 0;
+}
+
+.video-theater-info h2 {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.video-theater-info p {
+  color: rgb(255 255 255 / 0.74);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.video-theater-info span {
+  color: #8eb4ff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 @media (max-width: 1024px) {
   .media-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -141,5 +251,25 @@
   .media-result-summary {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .video-theater-overlay {
+    padding: 18px;
+  }
+
+  .video-theater-dialog {
+    gap: 14px;
+  }
+
+  .video-theater-close {
+    top: -48px;
+  }
+
+  .video-theater-info h2 {
+    font-size: 18px;
+  }
+
+  .video-theater-info p {
+    font-size: 13px;
   }
 }

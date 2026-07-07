@@ -71,30 +71,16 @@ export default function NewsPage() {
     fetchNews();
   }, []);
 
-  if (isLoading) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', textAlign: 'center' }}>로딩 중...</div>;
-  if (error) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', color: 'red', textAlign: 'center' }}>{error}</div>;
-  if (newsList.length === 0) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', textAlign: 'center' }}>표시할 뉴스가 없습니다.</div>;
+  if (isLoading) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>로딩 중...</div>;
+  if (error) return <div style={{ padding: '40px', minHeight: '100vh', color: 'red', textAlign: 'center' }}>{error}</div>;
+  if (newsList.length === 0) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>표시할 뉴스가 없습니다.</div>;
 
   return (
-    // 🎨 image_5a713c.png 대시보드 연회색 배경 세팅
-    <div style={{ backgroundColor: '#f4f5f9', minHeight: '100vh', padding: '40px 60px', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh' }}>
       
-      {/* 🏷️ 상단 타이틀 바 및 관리자용 가상 컴포넌트 버튼 셋 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '35px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '35px' }}>
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', margin: '0 0 8px 0' }}>청년 정책 뉴스</h1>
-          <span style={{ display: 'inline-block', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: 'bold' }}>
-            REQ-F-08
-          </span>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            🔒 공개
-          </button>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563', cursor: 'pointer' }}>
-            ⚙️ MVT ∨
-          </button>
         </div>
       </div>
 

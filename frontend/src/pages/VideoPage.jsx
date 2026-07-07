@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Play, X } from 'lucide-react';
 
 const VideoPage = () => {
   const [videoList, setVideoList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -233,33 +235,35 @@ const VideoPage = () => {
     fetchVideos();
   }, []);
 
-  if (isLoading) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', textAlign: 'center' }}>로딩 중...</div>;
-  if (error) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', color: 'red', textAlign: 'center' }}>{error}</div>;
-  if (videoList.length === 0) return <div style={{ padding: '40px', backgroundColor: '#f4f5f9', minHeight: '100vh', textAlign: 'center' }}>표시할 영상이 없습니다.</div>;
+  useEffect(() => {
+    if (!selectedVideo) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedVideo(null);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedVideo]);
+
+  if (isLoading) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>로딩 중...</div>;
+  if (error) return <div style={{ padding: '40px', minHeight: '100vh', color: 'red', textAlign: 'center' }}>{error}</div>;
+  if (videoList.length === 0) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>표시할 영상이 없습니다.</div>;
 
   return (
-    // 🎨 image_5a1740.jpg 대시보드 배경색 동기화 (#f4f5f9 연회색 배경)
-    <div style={{ backgroundColor: '#f4f5f9', minHeight: '100vh', padding: '40px 60px' }}>
+    <div style={{ minHeight: '100vh' }}>
       
-      {/* 🏷️ 상단 타이틀 및 액션 영역 레이아웃 설정 */}
-      <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'flex-start', marginBottom: '35px', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '35px', width: '100%' }}>
         <div style={{ flexGrow: 1 }}>
-          {/* 제목 텍스트 일치 처리 */}
           <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111', margin: '0 0 8px 0' }}>정책 안내 영상</h1>
-          {/* 요구사항 배지 UI 스타일 구현 */}
-          <span style={{ display: 'inline-block', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: 'bold', fontFamily: 'monospace' }}>
-            REQ-F-08
-          </span>
-        </div>
-
-        {/* 🛠️ 설계서 우측 상단 가상 관리용 버튼 컴포넌트 동기화 */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            🔒 공개
-          </button>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563', cursor: 'pointer' }}>
-            ⚙️ MVT ∨
-          </button>
         </div>
       </div>
 
@@ -294,6 +298,15 @@ const VideoPage = () => {
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
+              <button
+                type="button"
+                className="video-theater-trigger"
+                onClick={() => setSelectedVideo(video)}
+                aria-label={`${video.title} 영화관 모드로 보기`}
+              >
+                <Play size={20} aria-hidden="true" />
+                크게 보기
+              </button>
             </div>
             
             {/* 텍스트 내용 메타 데이터 파트 */}
@@ -318,6 +331,44 @@ const VideoPage = () => {
           </div>
         ))}
       </div>
+
+      {selectedVideo ? (
+        <div
+          className="video-theater-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="video-theater-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedVideo(null);
+            }
+          }}
+        >
+          <div className="video-theater-dialog">
+            <button
+              type="button"
+              className="video-theater-close"
+              onClick={() => setSelectedVideo(null)}
+              aria-label="영화관 모드 닫기"
+            >
+              <X size={22} aria-hidden="true" />
+            </button>
+            <div className="video-theater-player">
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.embedId}?autoplay=1`}
+                title={selectedVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div className="video-theater-info">
+              <h2 id="video-theater-title">{selectedVideo.title}</h2>
+              <p>{selectedVideo.description}</p>
+              <span>{selectedVideo.source}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
