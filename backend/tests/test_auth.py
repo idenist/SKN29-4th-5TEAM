@@ -10,8 +10,11 @@ NOTE (확인 필요):
 """
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from apps.users.models import EmailVerificationCode
 
 User = get_user_model()
 
@@ -27,6 +30,23 @@ def build_signup_payload(**overrides):
     return payload
 
 
+def create_verified_signup_code(email, code="123456"):
+    return EmailVerificationCode.objects.create(
+        email=email,
+        code=code,
+        purpose=EmailVerificationCode.PURPOSE_SIGNUP,
+        is_verified=True,
+        expires_at=timezone.now() + timezone.timedelta(minutes=10),
+    )
+
+
+def build_verified_signup_payload(**overrides):
+    payload = build_signup_payload(**overrides)
+    payload["verification_code"] = overrides.get("verification_code", "123456")
+    create_verified_signup_code(payload["email"], payload["verification_code"])
+    return payload
+
+
 class SignupTests(APITestCase):
     """TC-AUTH-01: 회원가입 API가 정상 동작하는가"""
 
@@ -34,7 +54,7 @@ class SignupTests(APITestCase):
         self.url = reverse("users:signup")
 
     def test_signup_success(self):
-        response = self.client.post(self.url, build_signup_payload(), format="json")
+        response = self.client.post(self.url, build_verified_signup_payload(), format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(email="testuser01@example.com").exists())
 
@@ -49,10 +69,10 @@ class SignupTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_signup_fails_with_duplicate_email(self):
-        self.client.post(self.url, build_signup_payload(), format="json")
+        self.client.post(self.url, build_verified_signup_payload(), format="json")
         response = self.client.post(
             self.url,
-            build_signup_payload(username="testuser02"),
+            build_signup_payload(username="testuser02", verification_code="123456"),
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -68,7 +88,7 @@ class LoginTests(APITestCase):
 
     def setUp(self):
         self.login_url = reverse("users:login")
-        self.client.post(reverse("users:signup"), build_signup_payload(), format="json")
+        self.client.post(reverse("users:signup"), build_verified_signup_payload(), format="json")
 
     def test_login_success_returns_jwt_tokens(self):
         response = self.client.post(

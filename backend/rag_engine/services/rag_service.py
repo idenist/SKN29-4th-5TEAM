@@ -1,7 +1,11 @@
 from typing import Any, Optional
 from datetime import date
 import re
-from rag_engine.db.vector_store import YouthPolicyVectorStore, search_policy_chunks
+from rag_engine.db.vector_store import (
+    YouthPolicyVectorStore,
+    resolve_vector_db_dir,
+    search_policy_chunks,
+)
 
 
 DEFAULT_TOP_K = 5
@@ -621,7 +625,7 @@ def _metadata_fallback_startup_open_notices(
 
     load_dotenv(".env")
 
-    path = os.getenv("CHROMA_PERSIST_DIR", "../data/vector_db")
+    path = str(resolve_vector_db_dir())
     name = os.getenv("CHROMA_COLLECTION_NAME", "youth_opportunity_chunks")
 
     collection = chromadb.PersistentClient(path=path).get_collection(name)

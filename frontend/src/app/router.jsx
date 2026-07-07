@@ -5,6 +5,7 @@ import ProtectedRoute from '../components/layout/ProtectedRoute.jsx';
 import HomePage from '../pages/HomePage.jsx';
 import LoginPage from '../pages/LoginPage.jsx';
 import SignupPage from '../pages/SignupPage.jsx';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx';
 import PolicySearchPage from '../pages/PolicySearchPage.jsx';
 import PolicyDetailPage from '../pages/PolicyDetailPage.jsx';
 import ChatPage from '../pages/ChatPage.jsx';
@@ -12,6 +13,7 @@ import CommunityPage from '../pages/CommunityPage.jsx';
 import CommunityDetailPage from '../pages/CommunityDetailPage.jsx';
 import MyPage from '../pages/MyPage.jsx';
 import ProfileEditPage from '../pages/ProfileEditPage.jsx';
+import PasswordChangePage from '../pages/PasswordChangePage.jsx';
 import NotificationPage from '../pages/NotificationPage.jsx';
 import NewsPage from '../pages/NewsPage.jsx';
 import VideoPage from '../pages/VideoPage.jsx';
@@ -42,6 +44,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'mypage', element: <MyPage /> },
           { path: 'mypage/profile', element: <ProfileEditPage /> },
+          { path: 'mypage/password', element: <PasswordChangePage /> },
           { path: 'notifications', element: <NotificationPage /> }
         ]
       },
@@ -53,7 +56,8 @@ export const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: '/login', element: <LoginPage /> },
-      { path: '/signup', element: <SignupPage /> }
+      { path: '/signup', element: <SignupPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> }
     ]
   },
   {

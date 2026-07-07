@@ -25,7 +25,7 @@ function getErrorMessage(error) {
 export default function CommunityPage() {
   const [keyword, setKeyword] = useState('');
   const [submittedKeyword, setSubmittedKeyword] = useState('');
-  const [category, setCategory] = useState('전체');
+  const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +34,7 @@ export default function CommunityPage() {
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
-      const categoryMatched = category === '전체' || post.category === category;
+      const categoryMatched = category === 'all' || post.category === category;
       return categoryMatched && matchesKeyword(post, submittedKeyword);
     });
   }, [category, posts, submittedKeyword]);
@@ -77,7 +77,7 @@ export default function CommunityPage() {
       <PageHeader
         kicker="Community"
         title="청년 커뮤니티"
-        description="정책 후기, 질문, 정보 공유 게시글을 실제 커뮤니티 API 기준으로 확인합니다."
+        description="정책 후기, 질문, 정보를 함께 나눠보세요."
       />
 
       <CommunityToolbar

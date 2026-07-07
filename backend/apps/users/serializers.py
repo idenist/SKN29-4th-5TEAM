@@ -1,18 +1,35 @@
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import UserProfile
+
+from .models import EmailVerificationCode, UserProfile
 
 User = get_user_model()
+
+
+def get_verified_code(email, code, purpose):
+    return (
+        EmailVerificationCode.objects.filter(
+            email=email,
+            code=code,
+            purpose=purpose,
+            is_verified=True,
+            is_used=False,
+        )
+        .order_by("-created_at")
+        .first()
+    )
 
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True, min_length=8)
+    verification_code = serializers.CharField(write_only=True, min_length=6, max_length=6)
 
     class Meta:
         model = User
-        fields = ["email", "username", "password", "password_confirm"]
+        fields = ["email", "username", "password", "password_confirm", "verification_code"]
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -21,18 +38,31 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError(
-                {"password_confirm": "비밀번호가 일치하지 않습니다."}
-            )
+            raise serializers.ValidationError({"password_confirm": "비밀번호가 일치하지 않습니다."})
+
+        validate_password(attrs["password"])
+
+        verification = get_verified_code(
+            attrs["email"],
+            attrs["verification_code"],
+            EmailVerificationCode.PURPOSE_SIGNUP,
+        )
+        if verification is None or verification.is_expired():
+            raise serializers.ValidationError({"verification_code": "이메일 인증을 먼저 완료해 주세요."})
+
+        attrs["verification"] = verification
         return attrs
 
     def create(self, validated_data):
+        verification = validated_data.pop("verification")
+        validated_data.pop("verification_code")
         validated_data.pop("password_confirm")
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
         user.save()
         UserProfile.objects.create(user=user)
+        verification.mark_used()
         return user
 
 
@@ -57,6 +87,76 @@ class LoginSerializer(serializers.Serializer):
         }
 
 
+class EmailVerificationSendSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class EmailVerificationConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("가입된 이메일을 찾을 수 없습니다.")
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password_confirm"]:
+            raise serializers.ValidationError({"new_password_confirm": "비밀번호가 일치하지 않습니다."})
+
+        validate_password(attrs["new_password"])
+
+        verification = get_verified_code(
+            attrs["email"],
+            attrs["code"],
+            EmailVerificationCode.PURPOSE_PASSWORD_RESET,
+        )
+        if verification is None or verification.is_expired():
+            raise serializers.ValidationError({"code": "인증번호를 다시 확인해 주세요."})
+
+        attrs["verification"] = verification
+        return attrs
+
+    def save(self, **kwargs):
+        user = User.objects.get(email=self.validated_data["email"])
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        self.validated_data["verification"].mark_used()
+        return user
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_current_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("현재 비밀번호가 올바르지 않습니다.")
+        return value
+
+    def validate(self, attrs):
+        if attrs["new_password"] != attrs["new_password_confirm"]:
+            raise serializers.ValidationError({"new_password_confirm": "비밀번호가 일치하지 않습니다."})
+
+        validate_password(attrs["new_password"], self.context["request"].user)
+        return attrs
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
+
+
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
@@ -70,19 +170,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def validate_region(self, value):
         if value is not None and value.strip() == "":
-            raise serializers.ValidationError("거주지는 빈 값일 수 없습니다.")
+            raise serializers.ValidationError("거주지를 입력해 주세요.")
         return value
 
     def validate_interests(self, value):
-        # TODO: 허용 카테고리 확정 후 검증 로직 추가
-        # 3차 온통청년 대분류: 일자리/주거/교육/복지문화/참여권리
-        # 4차 UserProfile.interests에 동일 적용 여부 미확인 (정승 확인 대기)
         return value
 
 
 class MeSerializer(serializers.ModelSerializer):
-    """내 정보 조회용 - User + Profile 합쳐서 반환"""
-
     profile = UserProfileSerializer(read_only=True)
 
     class Meta:

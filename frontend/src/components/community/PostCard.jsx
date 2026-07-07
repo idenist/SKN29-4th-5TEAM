@@ -17,7 +17,7 @@ export default function PostCard({ post }) {
     <Link to={`/community/${post.id}`} className="community-post-link">
       <Card interactive className="community-post-card">
         <div className="community-post-top">
-          <Badge variant="primary">{post.category}</Badge>
+          <Badge variant="primary">{post.categoryLabel}</Badge>
           <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
         </div>
         <div className="community-post-body">

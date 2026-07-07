@@ -20,9 +20,14 @@ export default function ProfileCard({ user }) {
           ))}
         </div>
       </div>
-      <Link to="/mypage/profile" className="ui-button ui-button-secondary ui-button-sm">
-        프로필 수정
-      </Link>
+      <div className="mypage-profile-actions">
+        <Link to="/mypage/profile" className="ui-button ui-button-secondary ui-button-sm">
+          프로필 수정
+        </Link>
+        <Link to="/mypage/password" className="ui-button ui-button-ghost ui-button-sm">
+          비밀번호 변경
+        </Link>
+      </div>
     </Card>
   );
 }

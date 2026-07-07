@@ -41,12 +41,12 @@ export function useCommunityPosts() {
   }, [fetchPosts]);
 
   const createPost = useCallback(
-    async ({ title, content }) => {
+    async ({ title, content, category }) => {
       if (!isAuthenticated) {
         throw new Error('로그인이 필요한 기능입니다.');
       }
 
-      const post = await createPostRequest({ title, content });
+      const post = await createPostRequest({ title, content, category });
       await fetchPosts();
       return post;
     },

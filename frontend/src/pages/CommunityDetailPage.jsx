@@ -5,6 +5,7 @@ import ErrorState from '../components/common/ErrorState.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import PostActionBar from '../components/community/PostActionBar.jsx';
 import PostDetail from '../components/community/PostDetail.jsx';
+import { useAuth } from '../hooks/useAuth.js';
 import { useCommunityPost } from '../hooks/useCommunity.js';
 
 function getErrorMessage(error) {
@@ -14,6 +15,7 @@ function getErrorMessage(error) {
 export default function CommunityDetailPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { post, isLoading, error, refetch, updatePost, deletePost } = useCommunityPost(postId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
@@ -77,6 +79,8 @@ export default function CommunityDetailPage() {
     );
   }
 
+  const isOwnPost = user?.id != null && post.authorId && String(user.id) === String(post.authorId);
+
   return (
     <div className="community-detail-page">
       <Link to="/community" className="ui-button ui-button-ghost ui-button-sm community-back-link">
@@ -84,14 +88,16 @@ export default function CommunityDetailPage() {
         목록으로
       </Link>
       <PostDetail post={post} />
-      <PostActionBar
-        post={post}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        isSubmitting={isSubmitting}
-        message={actionMessage}
-        error={actionError}
-      />
+      {isOwnPost ? (
+        <PostActionBar
+          post={post}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          isSubmitting={isSubmitting}
+          message={actionMessage}
+          error={actionError}
+        />
+      ) : null}
     </div>
   );
 }

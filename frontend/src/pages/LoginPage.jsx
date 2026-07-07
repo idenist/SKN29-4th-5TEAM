@@ -15,13 +15,8 @@ const initialValues = {
 function validate(values) {
   const errors = {};
 
-  if (!values.email.trim()) {
-    errors.email = '이메일을 입력해 주세요.';
-  }
-
-  if (!values.password) {
-    errors.password = '비밀번호를 입력해 주세요.';
-  }
+  if (!values.email.trim()) errors.email = '이메일을 입력해 주세요.';
+  if (!values.password) errors.password = '비밀번호를 입력해 주세요.';
 
   return errors;
 }
@@ -33,6 +28,10 @@ function getErrorMessage(error) {
   return apiReason || apiMessage || '로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
+function isPasswordResetRequired(error) {
+  return error?.responseData?.error?.code === 'PASSWORD_RESET_REQUIRED';
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -41,12 +40,14 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [formError, setFormError] = useState('');
+  const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
 
   const updateValue = (key, value) => {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: '' }));
     setMessage('');
     setFormError('');
+    setNeedsPasswordReset(false);
   };
 
   const handleSubmit = async (event) => {
@@ -59,6 +60,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setMessage('');
     setFormError('');
+    setNeedsPasswordReset(false);
 
     try {
       const tokens = await loginRequest({
@@ -70,6 +72,7 @@ export default function LoginPage() {
       setMessage('로그인되었습니다.');
       navigate('/mypage');
     } catch (error) {
+      setNeedsPasswordReset(isPasswordResetRequired(error));
       setFormError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
@@ -93,6 +96,15 @@ export default function LoginPage() {
             {formError}
           </p>
         ) : null}
+        {needsPasswordReset ? (
+          <Link
+            to="/forgot-password"
+            state={{ email: values.email }}
+            className="ui-button ui-button-secondary ui-button-md"
+          >
+            이메일 인증으로 비밀번호 재설정
+          </Link>
+        ) : null}
         <Input
           label="이메일"
           type="email"
@@ -113,6 +125,11 @@ export default function LoginPage() {
           autoComplete="current-password"
           required
         />
+        <div className="auth-inline-link">
+          <Link to="/forgot-password" state={{ email: values.email }}>
+            비밀번호를 잊으셨나요?
+          </Link>
+        </div>
         <Button type="submit" fullWidth disabled={isSubmitting}>
           {isSubmitting ? '로그인 중...' : '로그인'}
         </Button>

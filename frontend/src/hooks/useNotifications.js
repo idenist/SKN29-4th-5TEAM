@@ -7,6 +7,15 @@ import {
 import { useAuth } from './useAuth.js';
 
 const LOGIN_REQUIRED_MESSAGE = '로그인이 필요한 기능입니다.';
+const NOTIFICATIONS_CHANGED_EVENT = 'notifications:changed';
+
+const emitNotificationsChanged = (unreadCount) => {
+  window.dispatchEvent(
+    new CustomEvent(NOTIFICATIONS_CHANGED_EVENT, {
+      detail: { unreadCount }
+    })
+  );
+};
 
 const getErrorMessage = (error, fallback) => {
   const apiMessage = error?.responseData?.message;
@@ -23,13 +32,16 @@ export function useNotifications() {
   const [error, setError] = useState('');
 
   const recomputeUnreadCount = useCallback((items) => {
-    setUnreadCount(items.filter((notification) => !notification.isRead).length);
+    const nextUnreadCount = items.filter((notification) => !notification.isRead).length;
+    setUnreadCount(nextUnreadCount);
+    emitNotificationsChanged(nextUnreadCount);
   }, []);
 
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) {
       setNotifications([]);
       setUnreadCount(0);
+      emitNotificationsChanged(0);
       setLoading(false);
       setError(LOGIN_REQUIRED_MESSAGE);
       return;
@@ -42,9 +54,11 @@ export function useNotifications() {
       const payload = await getNotifications();
       setNotifications(payload.notifications);
       setUnreadCount(payload.unreadCount);
+      emitNotificationsChanged(payload.unreadCount);
     } catch (requestError) {
       setNotifications([]);
       setUnreadCount(0);
+      emitNotificationsChanged(0);
       setError(getErrorMessage(requestError, '알림 목록을 불러오지 못했습니다.'));
     } finally {
       setLoading(false);

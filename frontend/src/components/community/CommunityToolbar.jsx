@@ -2,8 +2,9 @@ import Button from '../common/Button.jsx';
 import SearchBar from '../common/SearchBar.jsx';
 import Select from '../common/Select.jsx';
 import Toolbar from '../layout/Toolbar.jsx';
+import { communityCategoryOptions } from '../../services/adapters/communityAdapter.js';
 
-const categoryOptions = ['전체', '일반'].map((category) => ({ value: category, label: category }));
+const categoryOptions = [{ value: 'all', label: '전체' }, ...communityCategoryOptions];
 
 export default function CommunityToolbar({
   keyword,

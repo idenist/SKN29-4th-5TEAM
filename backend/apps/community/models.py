@@ -8,10 +8,26 @@ class CommunityPost(models.Model):
     카테고리, 이미지는 이번 범위에서 제외.
     """
 
+    CATEGORY_CHOICES = [
+        ("general", "일반"),
+        ("housing", "주거"),
+        ("finance", "금융"),
+        ("employment", "취업"),
+        ("education", "교육"),
+        ("startup", "창업"),
+        ("etc", "기타"),
+    ]
+
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="community_posts",
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default="general",
+        db_index=True,
     )
     title = models.CharField(max_length=200)
     content = models.TextField()

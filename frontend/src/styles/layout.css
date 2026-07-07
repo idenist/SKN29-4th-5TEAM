@@ -50,7 +50,8 @@
   letter-spacing: 0;
 }
 
-img.layout-brand-mark {
+img.layout-brand-mark,
+img.auth-logo-mark {
   display: block;
   object-fit: cover;
 }
