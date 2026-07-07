@@ -1,7 +1,7 @@
 # apps/policies/serializers.py
 
 from rest_framework import serializers
-from .models import Policy, Scrap, SearchHistory, ViewedPolicy
+from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword, PopularSearchKeyword
 
 
 class PolicyListSerializer(serializers.ModelSerializer):
@@ -78,3 +78,9 @@ class ViewedPolicySerializer(serializers.ModelSerializer):
         validated_data["user"] = self.context["request"].user
         # update_or_create로 views.py에서 처리 예정 (중복 방지)
         return super().create(validated_data)
+
+
+class PopularSearchKeywordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PopularSearchKeyword
+        fields = ["keyword", "count", "last_searched_at"]

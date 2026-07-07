@@ -1,23 +1,80 @@
 # 저장 위치: backend/apps/policies/views.py  (덮어쓰기)
 # 변경점: success_response/error_response 로컬 정의 제거 -> apps.common.responses에서 import
-from django.db.models import Q
+import re
+
+from django.db import transaction
+from django.db.models import Q, F
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 
 from apps.common.responses import success_response, error_response
 
-from .models import Policy, Scrap, SearchHistory, ViewedPolicy
+from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword, PopularSearchKeyword
 from .serializers import (
     PolicyListSerializer,
     PolicyDetailSerializer,
     ScrapSerializer,
     SearchHistorySerializer,
     ViewedPolicySerializer,
+    PopularSearchKeywordSerializer,
 )
 
 
 # ---------------------------------------------------------
 # 정책 목록 / 검색
 # ---------------------------------------------------------
+
+# ---------------------------------------------------------
+# 인기 검색어 익명 집계 유틸
+# ---------------------------------------------------------
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+PHONE_PATTERN = re.compile(r"^(?:\+?82[-.\s]?)?0?1[016789][-.\s]?\d{3,4}[-.\s]?\d{4}$")
+RRN_PATTERN = re.compile(r"^\d{6}[-\s]?[1-4]\d{6}$")
+LONG_NUMBER_PATTERN = re.compile(r"^\d{6,}$")
+
+
+def normalize_popular_search_keyword(raw_keyword):
+    if raw_keyword is None:
+        return ""
+
+    keyword = " ".join(str(raw_keyword).strip().split())
+
+    if len(keyword) < 2:
+        return ""
+    if len(keyword) > 50:
+        return ""
+
+    compact = keyword.replace("-", "").replace(" ", "").replace(".", "")
+
+    if EMAIL_PATTERN.match(keyword):
+        return ""
+    if PHONE_PATTERN.match(keyword):
+        return ""
+    if RRN_PATTERN.match(keyword):
+        return ""
+    if LONG_NUMBER_PATTERN.match(compact):
+        return ""
+
+    return keyword.lower()
+
+
+def record_popular_search_keyword(raw_keyword):
+    keyword = normalize_popular_search_keyword(raw_keyword)
+    if not keyword:
+        return
+
+    now = timezone.now()
+
+    with transaction.atomic():
+        obj, _ = PopularSearchKeyword.objects.select_for_update().get_or_create(
+            keyword=keyword,
+            defaults={"count": 0, "last_searched_at": now},
+        )
+        obj.count = F("count") + 1
+        obj.last_searched_at = now
+        obj.save(update_fields=["count", "last_searched_at", "updated_at"])
+
+
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
@@ -29,7 +86,11 @@ class PolicyListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Policy.objects.all().order_by("-info_score")
-        keyword = self.request.query_params.get("keyword")
+        keyword = (
+            self.request.query_params.get("keyword")
+            or self.request.query_params.get("search")
+            or self.request.query_params.get("q")
+        )
         region = self.request.query_params.get("region")
         source_category = self.request.query_params.get("source_category")
         age = self.request.query_params.get("age")
@@ -51,8 +112,15 @@ class PolicyListView(generics.ListAPIView):
                 Q(age_max__isnull=True) | Q(age_max__gte=age),
             )
 
-        if keyword and self.request.user.is_authenticated:
-            SearchHistory.objects.create(user=self.request.user, keyword=keyword)
+        normalized_keyword = normalize_popular_search_keyword(keyword)
+
+        if normalized_keyword and self.request.user.is_authenticated:
+            SearchHistory.objects.create(
+                user=self.request.user,
+                keyword=normalized_keyword,
+            )
+
+        record_popular_search_keyword(keyword)
 
         deadline_status = self.request.query_params.get("deadline_status")
 
@@ -162,6 +230,28 @@ class ScrapDeleteView(generics.DestroyAPIView):
 # ---------------------------------------------------------
 # 검색 기록
 # ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# 인기 검색어 TOP 10
+# ---------------------------------------------------------
+class PopularSearchKeywordListView(generics.ListAPIView):
+    """
+    GET /api/policies/popular-searches/
+    """
+
+    serializer_class = PopularSearchKeywordSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        return PopularSearchKeyword.objects.filter(count__gt=0).order_by("-count", "keyword")[:10]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return success_response(data=serializer.data)
+
+
 class SearchHistoryListView(generics.ListAPIView):
     """
     GET /api/policies/search-history/
