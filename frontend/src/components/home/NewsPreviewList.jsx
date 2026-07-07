@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import Card from '../common/Card.jsx';
 import Section from '../layout/Section.jsx';
 
 export default function NewsPreviewList({ news = [] }) {
@@ -16,7 +15,7 @@ export default function NewsPreviewList({ news = [] }) {
     >
       <div className="home-news-list">
         {news.map((item) => (
-          <Card key={item.id} interactive className="home-news-card">
+          <Link key={item.id} to="/news" className="ui-card ui-card-interactive home-news-card">
             <div>
               <p className="home-news-source">
                 {item.source} · {item.date}
@@ -24,7 +23,7 @@ export default function NewsPreviewList({ news = [] }) {
               <h3>{item.title}</h3>
             </div>
             <ArrowRight size={18} aria-hidden="true" />
-          </Card>
+          </Link>
         ))}
       </div>
     </Section>

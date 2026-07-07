@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="layout-footer-inner">
         <section className="layout-footer-about">
           <h2>이젠, 안쉼</h2>
-          <p>청년 정책 통합 플랫폼 · 2025 · REQ-N-05</p>
+          <p>청년 정책 통합 플랫폼</p>
         </section>
         <div className="layout-footer-links">
           {footerLinks.map((link) => (

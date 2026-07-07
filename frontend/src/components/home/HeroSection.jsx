@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import PopularSearchSection from './PopularSearchSection.jsx';
 
 export default function HeroSection() {
   const suggestions = ['월세 지원 정책 찾아줘', '취업 준비 지원 알려줘', '창업 지원사업 있어?', '교육비 지원 받을 수 있어?'];
@@ -27,6 +28,7 @@ export default function HeroSection() {
             <Link to="/chat">AI에게 물어보기</Link>
           </div>
         </div>
+        <PopularSearchSection />
         <div className="home-suggestion-list" aria-label="추천 질문">
           {suggestions.map((suggestion) => (
             <Link key={suggestion} to="/chat" className="home-suggestion-chip">

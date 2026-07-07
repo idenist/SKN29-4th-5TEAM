@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
 import PageHeader from '../components/common/PageHeader.jsx';
@@ -28,8 +29,10 @@ function matchesIncome(value, selected) {
 }
 
 export default function PolicySearchPage() {
-  const [keyword, setKeyword] = useState('');
-  const [submittedKeyword, setSubmittedKeyword] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const keywordParam = searchParams.get('keyword') || '';
+  const [keyword, setKeyword] = useState(keywordParam);
+  const [submittedKeyword, setSubmittedKeyword] = useState(keywordParam);
   const [filters, setFilters] = useState(initialFilters);
   const [page, setPage] = useState(1);
 
@@ -57,8 +60,16 @@ export default function PolicySearchPage() {
   const safePage = Math.min(page, totalPages);
   const pagedPolicies = filteredPolicies.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
+  useEffect(() => {
+    setKeyword(keywordParam);
+    setSubmittedKeyword(keywordParam);
+    setPage(1);
+  }, [keywordParam]);
+
   const handleSearch = () => {
-    setSubmittedKeyword(keyword);
+    const nextKeyword = keyword.trim();
+    setSubmittedKeyword(nextKeyword);
+    setSearchParams(nextKeyword ? { keyword: nextKeyword } : {});
     setPage(1);
   };
 
@@ -70,6 +81,7 @@ export default function PolicySearchPage() {
   const resetFilters = () => {
     setKeyword('');
     setSubmittedKeyword('');
+    setSearchParams({});
     setFilters(initialFilters);
     setPage(1);
   };
