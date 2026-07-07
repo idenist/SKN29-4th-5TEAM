@@ -57,6 +57,7 @@ services:
       - "80:80"
     volumes:
       - static_volume:/app/staticfiles
+      - ./frontend/dist:/app/frontend/dist
     depends_on:
       - backend
 

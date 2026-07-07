@@ -97,7 +97,10 @@ DATABASES = {
         "NAME": os.getenv("DB_NAME", "ezen_anshim"),
         "USER": os.getenv("DB_USER", "postgres"),
         "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
+        "HOST": os.getenv(
+            "DB_HOST",
+            "db" if os.path.exists("/.dockerenv") else "localhost"
+        ),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
@@ -171,6 +174,15 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 ).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
+
+# ------------------------------------------------------------------
+# CSRF (Django admin 등 세션 기반 로그인용. 배포 시 .env로 실제 도메인 추가)
+# ------------------------------------------------------------------
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:3000",
+).split(",")
 
 
 # ------------------------------------------------------------------
