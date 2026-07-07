@@ -14,7 +14,6 @@ import CommunityDetailPage from '../pages/CommunityDetailPage.jsx';
 import MyPage from '../pages/MyPage.jsx';
 import ProfileEditPage from '../pages/ProfileEditPage.jsx';
 import PasswordChangePage from '../pages/PasswordChangePage.jsx';
-import NotificationPage from '../pages/NotificationPage.jsx';
 import NewsPage from '../pages/NewsPage.jsx';
 import VideoPage from '../pages/VideoPage.jsx';
 
@@ -44,8 +43,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'mypage', element: <MyPage /> },
           { path: 'mypage/profile', element: <ProfileEditPage /> },
-          { path: 'mypage/password', element: <PasswordChangePage /> },
-          { path: 'notifications', element: <NotificationPage /> }
+          { path: 'mypage/password', element: <PasswordChangePage /> }
         ]
       },
       { path: 'news', element: <NewsPage /> },

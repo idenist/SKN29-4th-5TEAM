@@ -14,7 +14,7 @@ const toList = (value) => {
   }
 
   return value
-    .split(/\r?\n|[;•]/)
+    .split(/\r?\n|[;ㆍ]/)
     .map((item) => item.replace(/^[-\d.)\s]+/, '').trim())
     .filter(Boolean);
 };
