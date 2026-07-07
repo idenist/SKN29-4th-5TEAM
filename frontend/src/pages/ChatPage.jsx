@@ -25,7 +25,7 @@ export default function ChatPage() {
     <div className="chat-page">
       <PageHeader
         kicker="AI Chat"
-        title="AI 정책 챗봇"
+        title="AI 안쉼 챗봇"
         description="질문을 입력하면 실제 AI 정책 상담 API를 통해 답변과 추천 정책을 받아옵니다."
       />
 

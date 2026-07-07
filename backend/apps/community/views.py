@@ -1,5 +1,5 @@
-# 저장 위치: backend/apps/community/views.py  (덮어쓰기)
-# 변경점: success_response/error_response 로컬 정의 제거 -> apps.common.responses에서 import
+from django.db.models import F
+from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.views import APIView
 
@@ -8,6 +8,27 @@ from apps.common.responses import success_response, error_response
 from .models import CommunityPost
 from .permissions import IsAuthorOrReadOnly
 from .serializers import CommunityPostDetailSerializer, CommunityPostListSerializer
+
+VIEW_COUNT_DEBOUNCE_SECONDS = 5
+VIEWED_POSTS_SESSION_KEY = "community_viewed_posts"
+
+
+def should_increment_view_count(request, post_id):
+    viewed_posts = request.session.get(VIEWED_POSTS_SESSION_KEY, {})
+    now = timezone.now().timestamp()
+    post_key = str(post_id)
+    last_viewed_at = viewed_posts.get(post_key)
+
+    try:
+        if last_viewed_at and now - float(last_viewed_at) < VIEW_COUNT_DEBOUNCE_SECONDS:
+            return False
+    except (TypeError, ValueError):
+        pass
+
+    viewed_posts[post_key] = now
+    request.session[VIEWED_POSTS_SESSION_KEY] = viewed_posts
+    request.session.modified = True
+    return True
 
 
 # ---------------------------------------------------------
@@ -74,8 +95,10 @@ class CommunityPostDetailView(APIView):
                 error="NOT_FOUND",
                 status_code=status.HTTP_404_NOT_FOUND,
             )
-        post.view_count += 1
-        post.save(update_fields=["view_count"])
+        if should_increment_view_count(request, post.id):
+            CommunityPost.objects.filter(id=post.id).update(view_count=F("view_count") + 1)
+            post.refresh_from_db(fields=["view_count"])
+
         serializer = CommunityPostDetailSerializer(post)
         return success_response(data=serializer.data, message="게시글을 조회했습니다.")
 

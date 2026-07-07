@@ -1,42 +1,13 @@
 import HeroSection from '../components/home/HeroSection.jsx';
 import HomeStats from '../components/home/HomeStats.jsx';
+import HowItWorks from '../components/home/HowItWorks.jsx';
 import NewsPreviewList from '../components/home/NewsPreviewList.jsx';
 import PolicyPreviewList from '../components/home/PolicyPreviewList.jsx';
-import QuickMenu from '../components/home/QuickMenu.jsx';
-
-const quickMenus = [
-  {
-    title: '정책검색',
-    description: '지역, 나이, 관심 분야로 정책을 빠르게 찾아보세요.',
-    to: '/policies'
-  },
-  {
-    title: 'AI챗봇',
-    description: '궁금한 지원 정책을 자연어로 물어보세요.',
-    to: '/chat'
-  },
-  {
-    title: '커뮤니티',
-    description: '청년 정책 경험과 정보를 함께 나눠요.',
-    to: '/community'
-  },
-  {
-    title: '마이페이지',
-    description: '스크랩, 최근 본 정책, 알림을 모아봅니다.',
-    to: '/mypage'
-  },
-  {
-    title: '뉴스/영상',
-    description: '정책 뉴스와 설명 영상을 한 번에 확인하세요.',
-    to: '/news'
-  }
-];
 
 const stats = [
-  { label: '등록 정책', value: '2,640+', caption: '전국 청년 지원 정보' },
-  { label: '맞춤 추천', value: '1:1', caption: '프로필 기반 추천 흐름' },
-  { label: '커뮤니티', value: '320+', caption: '정책 후기와 질문' },
-  { label: '알림/스크랩', value: 'D-7', caption: '마감 전 확인 지원' }
+  { value: '26,803', label: '통합 지원 정보' },
+  { value: '3,165', label: '정책 제공 기관' },
+  { value: '6개', label: '맞춤 지원 분야' }
 ];
 
 const policies = [
@@ -94,10 +65,12 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <HeroSection />
-      <QuickMenu items={quickMenus} />
       <HomeStats stats={stats} />
-      <PolicyPreviewList policies={policies} />
-      <NewsPreviewList news={news} />
+      <HowItWorks />
+      <div className="home-lower-content">
+        <PolicyPreviewList policies={policies} />
+        <NewsPreviewList news={news} />
+      </div>
     </div>
   );
 }

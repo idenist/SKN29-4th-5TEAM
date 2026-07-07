@@ -69,25 +69,35 @@ export function useCommunityPost(postId) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchPostDetail = useCallback(async () => {
+  const fetchPostDetail = useCallback(async (config = {}) => {
     if (!postId) return;
 
     setIsLoading(true);
     setError('');
 
+    let isCanceled = false;
+
     try {
-      const nextPost = await getPostDetail(postId);
+      const nextPost = await getPostDetail(postId, config);
       setPost(nextPost);
     } catch (requestError) {
+      if (requestError.name === 'CanceledError' || requestError.code === 'ERR_CANCELED') {
+        isCanceled = true;
+        return;
+      }
       setPost(null);
       setError(getErrorMessage(requestError, '게시글을 찾을 수 없습니다.'));
     } finally {
-      setIsLoading(false);
+      if (!isCanceled) {
+        setIsLoading(false);
+      }
     }
   }, [postId]);
 
   useEffect(() => {
-    fetchPostDetail();
+    const controller = new AbortController();
+    fetchPostDetail({ signal: controller.signal });
+    return () => controller.abort();
   }, [fetchPostDetail]);
 
   const updatePost = useCallback(
@@ -121,4 +131,3 @@ export function useCommunityPost(postId) {
     deletePost
   };
 }
-

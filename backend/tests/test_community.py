@@ -10,7 +10,7 @@ NOTE (확인 필요):
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from apps.community.models import CommunityPost
 
@@ -88,3 +88,33 @@ class CommunityAuthorPermissionTests(APITestCase):
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(CommunityPost.objects.filter(id=self.post.id).exists())
+
+
+class CommunityViewCountTests(APITestCase):
+    """게시글 상세 조회수는 같은 상세 진입의 중복 요청에서 한 번만 증가해야 한다."""
+
+    def setUp(self):
+        self.author = User.objects.create_user(
+            username="view-author", email="view-author@example.com", password="testpass1234"
+        )
+        self.post = create_post(author=self.author)
+        self.url = reverse("community-post-detail", kwargs={"post_id": self.post.id})
+
+    def test_duplicate_detail_requests_in_same_session_increment_once(self):
+        first_response = self.client.get(self.url)
+        second_response = self.client.get(self.url)
+
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(second_response.status_code, status.HTTP_200_OK)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.view_count, 1)
+
+    def test_detail_requests_from_different_sessions_increment_separately(self):
+        other_client = APIClient()
+
+        self.client.get(self.url)
+        other_client.get(self.url)
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.view_count, 2)

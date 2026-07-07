@@ -11,8 +11,8 @@ export const createPost = async ({ title, content }) => {
   return adaptCommunityPost(post);
 };
 
-export const getPostDetail = async (postId) => {
-  const post = await apiClient.get(`/community/posts/${postId}/`);
+export const getPostDetail = async (postId, config = {}) => {
+  const post = await apiClient.get(`/community/posts/${postId}/`, config);
   return adaptCommunityPost(post);
 };
 

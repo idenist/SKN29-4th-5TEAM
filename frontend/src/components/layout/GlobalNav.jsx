@@ -2,11 +2,11 @@ import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { to: '/', label: '홈', end: true },
-  { to: '/policies', label: '정책검색' },
-  { to: '/chat', label: 'AI챗봇' },
-  { to: '/community', label: '커뮤니티' },
+  { to: '/policies', label: '정책 검색' },
+  { to: '/chat', label: 'AI 챗봇' },
   { to: '/news', label: '뉴스' },
-  { to: '/videos', label: '영상' }
+  { to: '/videos', label: '영상' },
+  { to: '/community', label: '커뮤니티' }
 ];
 
 export default function GlobalNav({ className = '' }) {
