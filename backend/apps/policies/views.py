@@ -9,7 +9,7 @@ from rest_framework import generics, permissions, status
 
 from apps.common.responses import success_response, error_response
 
-from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword, PopularSearchKeyword
+from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword
 from .serializers import (
     PolicyListSerializer,
     PolicyDetailSerializer,
@@ -78,7 +78,7 @@ def record_popular_search_keyword(raw_keyword):
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
-    쿼리 파라미터: keyword, region, source_category, age
+    쿼리 파라미터: keyword, region, source_category, age, deadline_status, limit, offset
     """
 
     serializer_class = PolicyListSerializer
@@ -94,6 +94,7 @@ class PolicyListView(generics.ListAPIView):
         region = self.request.query_params.get("region")
         source_category = self.request.query_params.get("source_category")
         age = self.request.query_params.get("age")
+        deadline_status = self.request.query_params.get("deadline_status")
 
         if keyword:
             queryset = queryset.filter(
@@ -112,6 +113,9 @@ class PolicyListView(generics.ListAPIView):
                 Q(age_max__isnull=True) | Q(age_max__gte=age),
             )
 
+        if deadline_status:
+            queryset = queryset.filter(deadline_status=deadline_status)
+
         normalized_keyword = normalize_popular_search_keyword(keyword)
 
         if normalized_keyword and self.request.user.is_authenticated:
@@ -122,32 +126,28 @@ class PolicyListView(generics.ListAPIView):
 
         record_popular_search_keyword(keyword)
 
-        deadline_status = self.request.query_params.get("deadline_status")
-
-        if deadline_status:
-            queryset = queryset.filter(deadline_status=deadline_status)
-            
         return queryset
 
-def list(self, request, *args, **kwargs):
-    queryset = self.filter_queryset(self.get_queryset())
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
-    try:
-        limit = int(request.query_params.get("limit", 20))
-        offset = int(request.query_params.get("offset", 0))
-    except ValueError:
-        return error_response(
-            message="limit, offset은 숫자여야 합니다.",
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        try:
+            limit = int(request.query_params.get("limit", 20))
+            offset = int(request.query_params.get("offset", 0))
+        except ValueError:
+            return error_response(
+                message="limit, offset은 숫자여야 합니다.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
-    limit = max(1, min(limit, 100))
-    offset = max(0, offset)
+        limit = max(1, min(limit, 100))
+        offset = max(0, offset)
 
-    page_queryset = queryset[offset:offset + limit]
+        page_queryset = queryset[offset:offset + limit]
 
-    serializer = self.get_serializer(page_queryset, many=True)
-    return success_response(data=serializer.data)
+        serializer = self.get_serializer(page_queryset, many=True)
+        return success_response(data=serializer.data)
+
 
 # ---------------------------------------------------------
 # 정책 상세 조회

@@ -1,8 +1,9 @@
 import logging
 
 from rest_framework import permissions, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.common.responses import error_response, success_response
 
 from .serializers import AIChatRequestSerializer
 from .services import run_ai_chat
@@ -185,6 +186,10 @@ class AIChatAPIView(APIView):
     비로그인 사용자도 질문 가능.
     로그인 사용자는 UserProfile을 자동으로 user_profile에 채워 넣는다.
     프론트에서 user_profile을 명시적으로 보낸 경우 해당 값을 우선한다.
+
+    응답은 공통 포맷 {success, data, message, error}을 따르며,
+    AI 원형 응답(answer/recommendations/sources/warnings/meta)은
+    data 내부에 그대로 유지한다.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -193,9 +198,11 @@ class AIChatAPIView(APIView):
         serializer = AIChatRequestSerializer(data=request.data)
 
         if not serializer.is_valid():
+
             return Response(
                 _build_validation_error_response(serializer.errors),
                 status=status.HTTP_400_BAD_REQUEST,
+
             )
 
         data = serializer.validated_data
@@ -255,3 +262,4 @@ class AIChatAPIView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
