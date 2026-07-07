@@ -1,6 +1,7 @@
 import logging
 
 from rest_framework import permissions, status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.responses import error_response, success_response

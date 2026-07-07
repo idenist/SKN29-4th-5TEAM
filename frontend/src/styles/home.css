@@ -108,18 +108,23 @@
   color: #a2a8b3;
 }
 
-.home-search-row a {
+.home-search-row a,
+.home-search-row button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 0;
   color: #fff;
   background: var(--home-blue);
+  font-family: inherit;
   font-size: 15px;
   font-weight: 900;
+  cursor: pointer;
   transition: background 160ms ease, transform 160ms ease;
 }
 
-.home-search-row a:hover {
+.home-search-row a:hover,
+.home-search-row button:hover {
   background: #2444de;
 }
 
@@ -670,7 +675,8 @@
     font-size: 13px;
   }
 
-  .home-search-row a {
+  .home-search-row a,
+  .home-search-row button {
     min-height: 58px;
     font-size: 14px;
   }
