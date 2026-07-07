@@ -38,6 +38,43 @@ class NotificationListView(ListAPIView):
 
 
 # ---------------------------------------------------------
+# 안 읽은 알림 개수만 조회 (Header 드롭다운 배지용)
+# ---------------------------------------------------------
+class NotificationUnreadCountView(APIView):
+    """
+    GET /api/notifications/unread-count/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        unread_count = Notification.objects.filter(
+            user=request.user, is_read=False
+        ).count()
+        return success_response(data={"unread_count": unread_count})
+
+
+# ---------------------------------------------------------
+# 알림 전체 읽음 처리
+# ---------------------------------------------------------
+class NotificationReadAllView(APIView):
+    """
+    PATCH /api/notifications/read-all/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        updated_count = Notification.objects.filter(
+            user=request.user, is_read=False
+        ).update(is_read=True)
+        return success_response(
+            data={"updated_count": updated_count},
+            message="모든 알림을 읽음 처리했습니다.",
+        )
+
+
+# ---------------------------------------------------------
 # 알림 읽음 처리
 # ---------------------------------------------------------
 class NotificationReadView(APIView):
