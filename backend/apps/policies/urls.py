@@ -6,6 +6,7 @@ from .views import (
     ScrapDeleteView,
     SearchHistoryListView,
     ViewedPolicyListView,
+    PopularSearchKeywordListView,
 )
 
 app_name = "policies"
@@ -17,6 +18,7 @@ urlpatterns = [
     path("scraps/", ScrapListCreateView.as_view(), name="scrap-list-create"),
     path("scraps/<str:item_id>/", ScrapDeleteView.as_view(), name="scrap-delete"),
     # 검색 기록
+    path("popular-searches/", PopularSearchKeywordListView.as_view(), name="popular-search-list"),
     path("search-history/", SearchHistoryListView.as_view(), name="search-history-list"),
     # 최근 본 공고
     path("viewed/", ViewedPolicyListView.as_view(), name="viewed-list"),
