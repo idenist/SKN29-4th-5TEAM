@@ -120,24 +120,38 @@
 
 .policy-condition-tip {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   margin-top: var(--space-8, 2rem);
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-6);
   border: 1px solid #cfd9ff;
   border-radius: 8px;
   background: #f3f6ff;
   color: #314f9f;
-  line-height: 1.75;
+  line-height: 1.65;
 }
 
 .policy-condition-tip strong {
   font-size: var(--font-size-lg);
 }
 
-.policy-condition-tip p {
+.policy-condition-tip ul {
   margin: 0;
+  padding-left: 1.05rem;
+}
+
+.policy-condition-tip li {
+  padding-left: var(--space-1);
   font-size: var(--font-size-md);
   font-weight: 700;
+}
+
+.policy-condition-tip li + li {
+  margin-top: var(--space-2);
+}
+
+.policy-condition-tip li::marker {
+  color: #314f9f;
+  font-size: 0.8em;
 }
 
 .policy-results {
