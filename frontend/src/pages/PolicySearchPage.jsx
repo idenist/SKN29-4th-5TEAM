@@ -69,6 +69,43 @@ function matchesIncome(value, selected) {
   return selected === '전체' || value.includes(selected);
 }
 
+function matchesCategory(policy, selected) {
+  if (selected === '전체') return true;
+
+  const domain = `${policy.domain || ''} ${policy.category || ''} ${policy.source_category || ''}`;
+
+  const aliases = {
+    취업: ['취업', '일자리'],
+    주거: ['주거', '월세', '전세'],
+    금융: ['금융', '자산', '저축', '복지문화'],
+    교육: ['교육', '훈련', 'training', 'education'],
+    창업: ['창업', 'startup', 'startup_notice']
+  };
+
+  return (aliases[selected] || [selected]).some((word) => domain.includes(word));
+}
+
+function normalizeApiFilters(filters) {
+  const result = {};
+
+  if (filters.age) {
+    result.age = filters.age;
+  }
+
+  if (filters.region && filters.region !== '전체') {
+    result.region = filters.region;
+  }
+
+  // sourceCategory에는 화면용 분야명을 그대로 넣으면 안 됨.
+  // 창업은 startup_notice로 매핑 가능.
+  // 교육은 훈련과정 검색을 의도할 때만 training으로 보내는 게 안전.
+  if (filters.category === '창업') {
+    result.sourceCategory = 'startup_notice';
+  }
+
+  return result;
+}
+
 export default function PolicySearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const keywordParam = searchParams.get('keyword') || '';
@@ -78,16 +115,15 @@ export default function PolicySearchPage() {
   const [page, setPage] = useState(() => getPageFromSearchParams(searchParams));
   const hasSearchCondition = Boolean(submittedKeyword.trim()) || !isDefaultFilters(filters);
 
-  const queryParams = useMemo(
-    () => ({
+  const queryParams = useMemo(() => {
+    const apiFilters = normalizeApiFilters(filters);
+
+    return {
       keyword: submittedKeyword,
-      age: filters.age,
-      region: filters.region,
-      sourceCategory: filters.category,
+      ...apiFilters,
       enabled: hasSearchCondition
-    }),
-    [submittedKeyword, filters.age, filters.category, filters.region, hasSearchCondition]
-  );
+    };
+  }, [submittedKeyword, filters, hasSearchCondition]);
 
   const { policies, isLoading, error, refetch } = usePolicyList(queryParams);
 
@@ -96,6 +132,7 @@ export default function PolicySearchPage() {
 
     return policies.filter((policy) => {
       return (
+        matchesCategory(policy, filters.category) &&
         matchesFilter(policy.status, filters.status) &&
         matchesIncome(policy.income, filters.income)
       );
