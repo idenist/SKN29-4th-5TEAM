@@ -254,12 +254,12 @@ const VideoPage = () => {
     };
   }, [selectedVideo]);
 
-  if (isLoading) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>로딩 중...</div>;
-  if (error) return <div style={{ padding: '40px', minHeight: '100vh', color: 'red', textAlign: 'center' }}>{error}</div>;
-  if (videoList.length === 0) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>표시할 영상이 없습니다.</div>;
+  if (isLoading) return <div style={{ padding: '40px', minHeight: '100vh', backgroundColor: 'transparent', textAlign: 'center' }}>로딩 중...</div>;
+  if (error) return <div style={{ padding: '40px', minHeight: '100vh', backgroundColor: 'transparent', color: 'red', textAlign: 'center' }}>{error}</div>;
+  if (videoList.length === 0) return <div style={{ padding: '40px', minHeight: '100vh', backgroundColor: 'transparent', textAlign: 'center' }}>표시할 영상이 없습니다.</div>;
 
   return (
-    <div style={{ minHeight: '100vh', padding: '40px 60px', backgroundColor: '#f4f5f9' }}>
+    <div style={{ minHeight: '100vh', padding: '40px 60px', backgroundColor: 'transparent' }}>
       
       <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '35px', width: '100%' }}>
         <div style={{ flexGrow: 1 }}>

@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader.jsx';
 import ChatInput from '../components/chat/ChatInput.jsx';
 import ChatShell from '../components/chat/ChatShell.jsx';
@@ -13,6 +15,8 @@ const exampleQuestions = [
 ];
 
 export default function ChatPage() {
+  const [searchParams] = useSearchParams();
+  const initialMessageRef = useRef('');
   const {
     messages,
     recommendedPolicies,
@@ -20,6 +24,14 @@ export default function ChatPage() {
     error,
     sendMessage
   } = useChat();
+
+  useEffect(() => {
+    const initialMessage = searchParams.get('message')?.trim();
+    if (!initialMessage || initialMessageRef.current === initialMessage) return;
+
+    initialMessageRef.current = initialMessage;
+    sendMessage(initialMessage);
+  }, [searchParams, sendMessage]);
 
   return (
     <div className="chat-page">

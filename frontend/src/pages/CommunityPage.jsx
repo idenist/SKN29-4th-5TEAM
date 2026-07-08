@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
-import PageHeader from '../components/common/PageHeader.jsx';
 import Pagination from '../components/common/Pagination.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import CommunityToolbar from '../components/community/CommunityToolbar.jsx';
@@ -72,26 +71,9 @@ export default function CommunityPage() {
   };
 
   return (
-    // 🎨 image_7559a2.png 기반 전체 레이아웃 테마 동기화 (연회색 배경)
-    <div style={{ backgroundColor: '#f4f5f9', minHeight: '100vh', padding: '40px 60px', fontFamily: 'sans-serif' }}>
-      
-      {/* 🏷️ 타이틀 및 요구사항 배지 영역 (REQ-F-09 및 관리 버튼셋 포함) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-        <div>
-          <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', margin: '0 0 8px 0' }}>커뮤니티</h1>
-          <span style={{ display: 'inline-block', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '3px 10px', fontSize: '11px', fontWeight: 'bold' }}>
-            REQ-F-09
-          </span>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            🔒 공개
-          </button>
-          <button style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '6px 14px', fontSize: '13px', color: '#4b5563' }}>
-            ⚙️ MVT ∨
-          </button>
-        </div>
+    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', padding: '40px 60px', fontFamily: 'inherit' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', margin: 0 }}>커뮤니티</h1>
       </div>
 
       <CommunityToolbar

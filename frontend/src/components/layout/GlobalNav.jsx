@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { to: '/', label: '홈', end: true },
-  { to: '/policies', label: '정책 검색' },
   { to: '/chat', label: 'AI 챗봇' },
+  { to: '/policies', label: '정책 검색' },
   { to: '/news', label: '뉴스' },
   { to: '/videos', label: '영상' },
   { to: '/community', label: '커뮤니티' }
