@@ -628,7 +628,7 @@ def generate_answer_rule_based(
     return (
         f"입력하신 조건({condition_text})을 기준으로 관련 정책 {len(titles)}개를 찾았습니다.\n\n"
         + "\n".join(titles)
-        + "\n\n자세한 자격 조건, 신청 기간, 제출서류는 아래 추천 카드와 원문 링크에서 확인해 주세요."
+        + "\n\n자세한 자격 조건, 신청 기간, 제출서류는 우측 추천 카드와 원문 링크에서 확인해 주세요."
     )
 
 def generate_answer(
