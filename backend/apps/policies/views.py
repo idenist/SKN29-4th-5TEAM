@@ -103,9 +103,20 @@ class PolicyListView(generics.ListAPIView):
             queryset = queryset.filter(
                 Q(title__icontains=keyword) | Q(policy_summary__icontains=keyword)
             )
+    
         if region:
             region_code = resolve_region_code(region)
-            queryset = queryset.filter(region_codes__contains=[region_code])
+            prefix = region_code[:2]
+            queryset = queryset.extra(
+                where=[
+                    "EXISTS ("
+                    "  SELECT 1 FROM jsonb_array_elements_text(region_codes::jsonb) AS elem "
+                    "  WHERE elem LIKE %s OR elem LIKE %s"
+                    ")"
+                ],
+                params=[f"{prefix}%", f"%{region}%"],
+            )
+        
         if source_category:
             queryset = queryset.filter(source_category=source_category)
         if domain:
