@@ -1,5 +1,6 @@
 import { adaptNotificationList } from './notificationAdapter';
 import { adaptPolicyListItem, adaptSearchHistories } from './policyAdapter';
+import { formatDate } from '../../utils/dateFormat.js';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -9,8 +10,8 @@ export const adaptProfile = (profile = {}) => ({
   interests: asArray(profile.interests),
   profileImage: profile.profile_image_url || '',
   profileImageUrl: profile.profile_image_url || '',
-  createdAt: profile.created_at || '',
-  updatedAt: profile.updated_at || '',
+  createdAt: formatDate(profile.created_at, ''),
+  updatedAt: formatDate(profile.updated_at, ''),
   raw: profile
 });
 
@@ -28,7 +29,7 @@ export const adaptMe = (me = {}) => {
     interests: profile.interests,
     profileImage: profile.profileImage,
     profile,
-    dateJoined: me.date_joined || '',
+    dateJoined: formatDate(me.date_joined, ''),
     raw: me
   };
 };
@@ -51,7 +52,7 @@ export const adaptMyPageSummary = (summary = {}) => ({
     itemId: policy.item_id || '',
     title: policy.title || '정책',
     category: '정책',
-    viewedAt: policy.viewed_at || '',
+    viewedAt: formatDate(policy.viewed_at, ''),
     raw: policy
   })),
   raw: summary
@@ -61,7 +62,7 @@ export const adaptMyScraps = (scraps = []) =>
   asArray(scraps).map((scrap) => ({
     ...adaptPolicyListItem(scrap.policy_detail || {}),
     scrapId: scrap.id,
-    createdAt: scrap.created_at || '',
+    createdAt: formatDate(scrap.created_at, ''),
     raw: scrap
   }));
 
@@ -70,7 +71,7 @@ export const adaptMySearchHistory = adaptSearchHistories;
 export const adaptMyViewedPolicies = (items = []) =>
   asArray(items).map((viewed) => ({
     ...adaptPolicyListItem(viewed.policy_detail || {}),
-    viewedAt: viewed.viewed_at || '',
+    viewedAt: formatDate(viewed.viewed_at, ''),
     raw: viewed
   }));
 

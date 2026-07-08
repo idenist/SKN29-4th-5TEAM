@@ -12,12 +12,6 @@ const allValues = new Set(['전체', '', undefined, null]);
 
 const sourceCategoryMap = {
   정책: 'policy',
-  주거: 'policy',
-  금융: 'policy',
-  복지: 'policy',
-  창업: 'startup_notice',
-  취업: 'training',
-  교육: 'training',
   policy: 'policy',
   startup_notice: 'startup_notice',
   training: 'training'
@@ -70,7 +64,8 @@ const toPolicyParams = (params = {}) => ({
   keyword: params.keyword || params.search || undefined,
   region: normalizeRegionParam(params.region),
   source_category: normalizeSourceCategoryParam(params.sourceCategory || params.source_category),
-  domain: allValues.has(params.domain || params.category) ? undefined : params.domain || params.category,
+  category: allValues.has(params.category) ? undefined : params.category,
+  domain: allValues.has(params.domain) ? undefined : params.domain,
   age: params.age || undefined,
   income_condition: allValues.has(params.incomeCondition || params.income_condition || params.income)
     ? undefined
@@ -81,8 +76,22 @@ const toPolicyParams = (params = {}) => ({
 });
 
 export const getPolicies = async (params = {}) => {
-  const policies = await apiClient.get('/policies/', { params: toPolicyParams(params) });
+  const payload = await apiClient.get('/policies/', { params: toPolicyParams(params) });
+  const policies = Array.isArray(payload) ? payload : payload?.results || [];
   return adaptPolicies(policies);
+};
+
+export const getPolicyPage = async (params = {}) => {
+  const payload = await apiClient.get('/policies/', { params: toPolicyParams(params) });
+  const policies = Array.isArray(payload) ? payload : payload?.results || [];
+
+  return {
+    policies: adaptPolicies(policies),
+    totalCount: Array.isArray(payload) ? policies.length : payload?.count ?? policies.length,
+    limit: Array.isArray(payload) ? policies.length : payload?.limit ?? params.limit,
+    offset: Array.isArray(payload) ? 0 : payload?.offset ?? params.offset ?? 0,
+    raw: payload
+  };
 };
 
 export const getPolicyDetail = async (itemId) => {
@@ -114,6 +123,7 @@ export const getViewedPolicies = async () => {
 
 export default {
   getPolicies,
+  getPolicyPage,
   getPolicyDetail,
   getScraps,
   createScrap,

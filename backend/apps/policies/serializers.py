@@ -4,8 +4,33 @@ from rest_framework import serializers
 from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword, PopularSearchKeyword
 
 
+def _text(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _effective_participation_target(policy):
+    if policy.source_category != "training":
+        return policy.participation_target
+
+    raw_data = policy.raw_data if isinstance(policy.raw_data, dict) else {}
+    return (
+        _text(raw_data.get("trainTarget"))
+        or _text(policy.participation_target)
+        or _text(raw_data.get("target_text"))
+        or _text(raw_data.get("realMan"))
+        or _text(raw_data.get("courseMan"))
+    )
+
+
 class PolicyListSerializer(serializers.ModelSerializer):
     """정책 목록 조회용 - 가벼운 필드만"""
+
+    participation_target = serializers.SerializerMethodField()
+
+    def get_participation_target(self, obj):
+        return _effective_participation_target(obj)
 
     class Meta:
         model = Policy
@@ -36,6 +61,11 @@ class PolicyListSerializer(serializers.ModelSerializer):
 
 class PolicyDetailSerializer(serializers.ModelSerializer):
     """정책 상세 조회용 - 전체 필드 (신규 필드는 all이라 자동 포함됨)"""
+
+    participation_target = serializers.SerializerMethodField()
+
+    def get_participation_target(self, obj):
+        return _effective_participation_target(obj)
 
     class Meta:
         model = Policy

@@ -3,17 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Bell, Check, Trash2, UserRound } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
-
-function formatDate(value) {
-  if (!value) return '';
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(value));
-}
+import { formatDate } from '../../utils/dateFormat.js';
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -196,7 +186,7 @@ export default function UserMenu() {
             로그아웃
           </button>
           <span className="layout-version-badge" aria-label="현재 버전">
-            ver 2.6
+            ver 2.7
           </span>
         </>
       ) : (
@@ -205,7 +195,7 @@ export default function UserMenu() {
             로그인
           </NavLink>
           <span className="layout-version-badge" aria-label="현재 버전">
-            ver 2.6
+            ver 2.7
           </span>
         </>
       )}

@@ -208,99 +208,195 @@
 
 .policy-list {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .policy-card-link {
   display: block;
 }
 
-.policy-card {
+.policy-card.policy-card-list-item {
+  position: relative;
   display: grid;
-  grid-template-rows: auto auto auto auto;
-  gap: var(--space-5, 1.25rem);
+  grid-template-columns: 104px minmax(0, 1fr) 152px;
+  align-items: start;
+  gap: var(--space-6);
+  min-height: 236px;
+  padding: var(--space-6);
+  border-color: #bfccff;
 }
 
-.policy-card-top,
-.policy-card-badges,
-.policy-card-tags {
+.policy-card-rank {
+  position: absolute;
+  left: -1px;
+  top: 82px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  border-radius: 0 7px 7px 0;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+  box-shadow: var(--shadow-sm);
+}
+
+.policy-card-icon-link,
+.policy-card-content-link {
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.policy-card-icon-link {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-3);
+  padding-left: var(--space-2);
+  padding-top: var(--space-4);
+}
+
+.policy-card-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border: 1px solid #dce3f2;
+  border-radius: 14px;
+  background: #f4f7fb;
+  color: #4aaee8;
+}
+
+.policy-card-icon-link .ui-badge {
+  justify-content: center;
+  max-width: 96px;
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  text-align: center;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.policy-card-content-link {
+  display: grid;
+  gap: var(--space-4);
+  min-height: 188px;
+  padding-right: var(--space-2);
+}
+
+.policy-card-content-top,
+.policy-card-badges {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.policy-card-top {
+.policy-card-content-top {
   justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-5);
 }
 
-.policy-card-badges,
-.policy-card-tags {
+.policy-card-badges {
   flex-wrap: wrap;
+  flex: 0 0 auto;
+  justify-content: flex-end;
 }
 
-.policy-card-deadline {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 800;
-}
-
-.policy-card-main {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.policy-card-main h2 {
+.policy-card-content-top h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: 1.45rem;
+  line-height: 1.28;
+  letter-spacing: 0;
 }
 
-.policy-card-main p {
+.policy-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   margin: 0;
   color: var(--color-text-muted);
-  line-height: 1.7;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  line-height: 1.6;
 }
 
-.policy-card-info {
+.policy-card-compact-info {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-5);
   margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid #edf1f7;
 }
 
-.policy-card-info div {
+.policy-card-compact-info div {
   display: grid;
-  grid-template-rows: auto 1fr;
   gap: var(--space-1);
-  min-height: 96px;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
+  min-width: 0;
 }
 
-.policy-card-info .policy-card-info-wide {
-  grid-column: span 2;
+.policy-card-compact-info dt {
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 900;
 }
 
-.policy-card-info dt {
+.policy-card-compact-info dd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.policy-card-actions {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+}
+
+.policy-card-apply-button,
+.policy-card-source-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-1);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 800;
+  min-height: 62px;
+  padding: 0 var(--space-3);
+  border-radius: 8px;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
 }
 
-.policy-card-info dd {
-  margin: 0;
-  font-weight: 800;
-  line-height: 1.45;
-  word-break: keep-all;
+.policy-card-apply-button {
+  border: 1px solid #91a7ee;
+  background: #91a7ee;
+  color: #fff;
 }
 
-.policy-card-tags span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 800;
+.policy-card-apply-button-disabled {
+  cursor: default;
+}
+
+.policy-card-source-button {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
 }
 
 .policy-detail-page {
@@ -534,7 +630,6 @@
     grid-template-columns: 1fr;
   }
 
-  .policy-card-top,
   .policy-result-toolbar,
   .policy-result-toolbar div,
   .policy-detail-header,
@@ -547,13 +642,45 @@
     font-size: var(--font-size-lg);
   }
 
-  .policy-card-info {
-    display: grid;
+  .policy-card.policy-card-list-item {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: var(--space-5);
+  }
+
+  .policy-card-rank {
+    position: static;
+    width: 32px;
+    border-radius: 7px;
+  }
+
+  .policy-card-icon-link {
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    align-items: center;
+    align-content: start;
+    padding-left: 0;
+  }
+
+  .policy-card-icon-box {
+    width: 56px;
+    height: 56px;
+  }
+
+  .policy-card-content-top {
+    flex-direction: column;
+  }
+
+  .policy-card-badges {
+    justify-content: flex-start;
+  }
+
+  .policy-card-compact-info {
     grid-template-columns: 1fr;
   }
 
-  .policy-card-info .policy-card-info-wide {
-    grid-column: auto;
+  .policy-card-compact-info dd {
+    white-space: normal;
   }
 
   .policy-detail-header {

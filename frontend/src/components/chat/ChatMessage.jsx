@@ -1,9 +1,4 @@
-function formatTime(value) {
-  return new Intl.DateTimeFormat('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(value));
-}
+import { formatDate } from '../../utils/dateFormat.js';
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -13,7 +8,7 @@ export default function ChatMessage({ message }) {
       <div className="chat-message-bubble">
         <p>{message.content}</p>
       </div>
-      <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
+      <time dateTime={message.createdAt}>{formatDate(message.createdAt, '')}</time>
     </article>
   );
 }

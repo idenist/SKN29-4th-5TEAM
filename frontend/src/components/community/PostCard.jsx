@@ -2,15 +2,7 @@ import { Link } from 'react-router-dom';
 import { Eye, MessageCircle, ThumbsUp } from 'lucide-react';
 import Badge from '../common/Badge.jsx';
 import Card from '../common/Card.jsx';
-
-function formatDate(value) {
-  if (!value) return '날짜 없음';
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date(value));
-}
+import { formatDate } from '../../utils/dateFormat.js';
 
 export default function PostCard({ post }) {
   return (

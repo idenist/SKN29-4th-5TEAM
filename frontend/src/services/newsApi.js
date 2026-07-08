@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { formatDate } from '../utils/dateFormat.js';
 
 const cleanText = (text) => {
   if (!text) return '';
@@ -15,8 +16,8 @@ const formatNewsItem = (item, index) => ({
   title: cleanText(item.title),
   summary: cleanText(item.description),
   source: '네이버 뉴스',
-  publishedAt: new Date(item.pubDate).toLocaleDateString('ko-KR').replace(/\.$/, ''),
-  date: new Date(item.pubDate).toLocaleDateString('ko-KR').replace(/\.$/, ''),
+  publishedAt: formatDate(item.pubDate, ''),
+  date: formatDate(item.pubDate, ''),
   category: 'news',
   url: item.link
 });

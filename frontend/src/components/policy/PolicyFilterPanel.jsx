@@ -109,8 +109,8 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
       <div className="policy-condition-tip">
         <strong>조건 입력 팁</strong>
         <ul>
-          <li>먼저 위에서 궁금한 정책을 검색해 주세요.</li>
-          <li>더 정확한 결과가 필요할 때만 분야, 지역, 상태, 소득조건을 추가로 적용해 주세요.</li>
+          <li>먼저 검색창에서 궁금한 정책을 검색해 주세요.</li>
+          <li>더 정확한 결과가 필요하면 분야, 지역, 상태, 소득조건을 추가로 적용해 주세요.</li>
         </ul>
       </div>
     </aside>

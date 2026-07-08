@@ -277,6 +277,22 @@ def build_income_map(records: list[dict[str, Any]]) -> dict[str, str]:
     return result
 
 
+def resolve_participation_target(original: dict[str, Any]) -> str:
+    if text(original.get("source_category")) == "training":
+        return text(
+            original.get("trainTarget")
+            or original.get("target_text")
+            or original.get("participation_target")
+            or original.get("realMan")
+            or original.get("courseMan")
+        )
+
+    return text(
+        original.get("target_text")
+        or original.get("participation_target")
+    )
+
+
 def get_existing_ids(item_ids: list[str], batch_size: int = 5000) -> set[str]:
     existing: set[str] = set()
     for id_batch in chunks(item_ids, batch_size):
@@ -477,10 +493,7 @@ class Command(BaseCommand):
                         original.get("summary")
                         or original.get("policy_summary")
                     ),
-                    "participation_target": text(
-                        original.get("target_text")
-                        or original.get("participation_target")
-                    ),
+                    "participation_target": resolve_participation_target(original),
                     "benefit_text": text(original.get("benefit_text")),
                     "region_codes": normalize_region_codes(
                         original.get("region_codes")

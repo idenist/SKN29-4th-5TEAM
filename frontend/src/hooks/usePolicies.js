@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createScrap,
   deleteScrap,
-  getPolicies,
   getPolicyDetail,
+  getPolicyPage,
   getScraps
 } from '../services/policyApi.js';
 import { useAuth } from './useAuth.js';
@@ -17,6 +17,7 @@ const getErrorMessage = (error, fallback) => {
 
 export function usePolicyList(params = {}) {
   const [policies, setPolicies] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -42,6 +43,7 @@ export function usePolicyList(params = {}) {
   const fetchPolicies = useCallback(async () => {
     if (!enabled) {
       setPolicies([]);
+      setTotalCount(0);
       setIsLoading(false);
       setError('');
       return;
@@ -51,10 +53,12 @@ export function usePolicyList(params = {}) {
     setError('');
 
     try {
-      const nextPolicies = await getPolicies(stableParams);
-      setPolicies(nextPolicies);
+      const nextPage = await getPolicyPage(stableParams);
+      setPolicies(nextPage.policies);
+      setTotalCount(nextPage.totalCount);
     } catch (requestError) {
       setPolicies([]);
+      setTotalCount(0);
       setError(getErrorMessage(requestError, '정책 목록을 불러오지 못했습니다.'));
     } finally {
       setIsLoading(false);
@@ -67,6 +71,7 @@ export function usePolicyList(params = {}) {
 
   return {
     policies,
+    totalCount,
     isLoading,
     error,
     refetch: fetchPolicies

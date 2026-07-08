@@ -1,3 +1,5 @@
+import { formatDate } from '../../utils/dateFormat.js';
+
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const typeMap = {
@@ -14,7 +16,7 @@ export const adaptNotification = (notification = {}) => ({
   title: notification.title || '알림',
   message: notification.message || '',
   isRead: Boolean(notification.is_read ?? notification.isRead),
-  createdAt: notification.created_at || notification.createdAt || '',
+  createdAt: formatDate(notification.created_at || notification.createdAt, ''),
   policyId: notification.policy || null,
   policyTitle: notification.policy_title || '',
   link: notification.policy ? `/policies/${notification.policy}` : '',

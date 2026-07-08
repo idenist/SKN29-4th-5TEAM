@@ -3,7 +3,8 @@
 import re
 
 from django.db import transaction
-from django.db.models import Q, F
+from django.db.models import Q, F, CharField
+from django.db.models.functions import Cast
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 
@@ -32,6 +33,25 @@ EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE_PATTERN = re.compile(r"^(?:\+?82[-.\s]?)?0?1[016789][-.\s]?\d{3,4}[-.\s]?\d{4}$")
 RRN_PATTERN = re.compile(r"^\d{6}[-\s]?[1-4]\d{6}$")
 LONG_NUMBER_PATTERN = re.compile(r"^\d{6,}$")
+
+
+def build_category_query(category):
+    category = (category or "").strip()
+    if not category or category == "전체":
+        return Q()
+
+    if category == "취업":
+        return Q(domain__icontains="취업") | Q(domain__icontains="일자리")
+    if category == "교육":
+        return Q(source_category="training") | Q(domain__icontains="교육") | Q(domain__iexact="education")
+    if category == "창업":
+        return Q(source_category="startup_notice") | Q(domain__icontains="창업") | Q(domain__iexact="startup")
+    if category == "주거":
+        return Q(domain__icontains="주거")
+    if category == "금융":
+        return Q(domain__icontains="금융") | Q(domain__icontains="복지")
+
+    return Q(domain__icontains=category)
 
 
 def normalize_popular_search_keyword(raw_keyword):
@@ -79,20 +99,21 @@ def record_popular_search_keyword(raw_keyword):
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
-    쿼리 파라미터: keyword, region, source_category, domain, age, income_condition, deadline_status, limit, offset
+    쿼리 파라미터: keyword, region, category, source_category, domain, age, income_condition, deadline_status, limit, offset
     """
 
     serializer_class = PolicyListSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        queryset = Policy.objects.all().order_by("-info_score")
+        queryset = Policy.objects.all().order_by("-info_score", "item_id")
         keyword = (
             self.request.query_params.get("keyword")
             or self.request.query_params.get("search")
             or self.request.query_params.get("q")
         )
         region = self.request.query_params.get("region")
+        category = self.request.query_params.get("category")
         source_category = self.request.query_params.get("source_category")
         domain = self.request.query_params.get("domain")
         age = self.request.query_params.get("age")
@@ -103,9 +124,20 @@ class PolicyListView(generics.ListAPIView):
             queryset = queryset.filter(
                 Q(title__icontains=keyword) | Q(policy_summary__icontains=keyword)
             )
-        if region:
+        if region and region != "전체":
             region_code = resolve_region_code(region)
-            queryset = queryset.filter(region_codes__contains=[region_code])
+            region_prefix = region_code[:2]
+            queryset = queryset.annotate(
+                region_codes_text=Cast("region_codes", output_field=CharField())
+            ).filter(
+                Q(region_codes__contains=[region_code])
+                | Q(region_codes_text__icontains=f'"{region_prefix}')
+                | Q(location__icontains=region_code)
+                | Q(location__startswith=region_prefix)
+                | Q(location__icontains=region)
+            )
+        if category:
+            queryset = queryset.filter(build_category_query(category))
         if source_category:
             queryset = queryset.filter(source_category=source_category)
         if domain:
@@ -120,7 +152,15 @@ class PolicyListView(generics.ListAPIView):
             )
 
         if income_condition:
-            queryset = queryset.filter(income_condition__icontains=income_condition)
+            if income_condition in {"제한없음", "제한 없음"}:
+                queryset = queryset.filter(
+                    Q(income_condition="")
+                    | Q(income_condition__icontains="제한없")
+                    | Q(income_condition__icontains="정보 없음")
+                    | Q(income_condition__icontains="해당 없음")
+                )
+            else:
+                queryset = queryset.filter(income_condition__icontains=income_condition)
 
         if deadline_status:
             queryset = queryset.filter(deadline_status=deadline_status)
@@ -152,10 +192,18 @@ class PolicyListView(generics.ListAPIView):
         limit = max(1, min(limit, 100))
         offset = max(0, offset)
 
+        total_count = queryset.count()
         page_queryset = queryset[offset:offset + limit]
 
         serializer = self.get_serializer(page_queryset, many=True)
-        return success_response(data=serializer.data)
+        return success_response(
+            data={
+                "results": serializer.data,
+                "count": total_count,
+                "limit": limit,
+                "offset": offset,
+            }
+        )
 
 
 # ---------------------------------------------------------

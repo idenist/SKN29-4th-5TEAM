@@ -1,3 +1,5 @@
+import { formatDate } from '../../utils/dateFormat.js';
+
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
 export const communityCategoryLabels = {
@@ -21,8 +23,8 @@ export const adaptCommunityComment = (comment = {}) => ({
   authorId: comment.author_id != null ? String(comment.author_id) : comment.author != null ? String(comment.author) : '',
   author: comment.author_name || comment.author_email || comment.author || '익명',
   content: comment.content || '',
-  createdAt: comment.created_at || '',
-  updatedAt: comment.updated_at || '',
+  createdAt: formatDate(comment.created_at, ''),
+  updatedAt: formatDate(comment.updated_at, ''),
   raw: comment
 });
 
@@ -34,8 +36,8 @@ export const adaptCommunityPost = (post = {}) => ({
   authorId: post.author_id != null ? String(post.author_id) : post.author != null ? String(post.author) : '',
   author: post.author_name || post.author_email || post.author || '익명',
   authorEmail: post.author_email || '',
-  createdAt: post.created_at || '',
-  updatedAt: post.updated_at || '',
+  createdAt: formatDate(post.created_at, ''),
+  updatedAt: formatDate(post.updated_at, ''),
   content: post.content || post.content_preview || '',
   summary: post.content_preview || post.content || '',
   views: post.view_count ?? post.views ?? 0,

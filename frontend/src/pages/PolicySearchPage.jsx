@@ -11,7 +11,7 @@ import PolicyList from '../components/policy/PolicyList.jsx';
 import Toolbar from '../components/layout/Toolbar.jsx';
 import { usePolicyList } from '../hooks/usePolicies.js';
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 10;
 
 const initialFilters = {
   age: '',
@@ -61,14 +61,6 @@ function isDefaultFilters(filters) {
   );
 }
 
-function matchesFilter(value, selected) {
-  return selected === '전체' || value === selected;
-}
-
-function matchesIncome(value, selected) {
-  return selected === '전체' || value.includes(selected);
-}
-
 export default function PolicySearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const keywordParam = searchParams.get('keyword') || '';
@@ -86,29 +78,24 @@ export default function PolicySearchPage() {
       category: filters.category,
       status: filters.status,
       income: filters.income,
-      limit: 100,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
       enabled: hasSearchCondition
     }),
-    [submittedKeyword, filters.age, filters.category, filters.region, filters.status, filters.income, hasSearchCondition]
+    [submittedKeyword, filters.age, filters.category, filters.region, filters.status, filters.income, page, hasSearchCondition]
   );
 
-  const { policies, isLoading, error, refetch } = usePolicyList(queryParams);
+  const { policies, totalCount, isLoading, error, refetch } = usePolicyList(queryParams);
 
   const filteredPolicies = useMemo(() => {
     if (!hasSearchCondition) return [];
+    return policies;
+  }, [hasSearchCondition, policies]);
 
-    return policies.filter((policy) => {
-      return (
-        matchesFilter(policy.category, filters.category) &&
-        matchesFilter(policy.status, filters.status) &&
-        matchesIncome(policy.income, filters.income)
-      );
-    });
-  }, [hasSearchCondition, policies, filters.status, filters.income]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredPolicies.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedPolicies = filteredPolicies.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const resultStart = totalCount > 0 ? (safePage - 1) * PAGE_SIZE + 1 : 0;
+  const resultEnd = totalCount > 0 ? resultStart + filteredPolicies.length - 1 : 0;
 
   useEffect(() => {
     setKeyword(keywordParam);
@@ -167,8 +154,8 @@ export default function PolicySearchPage() {
             <div>
               {hasSearchCondition ? (
                 <>
-                  <strong>{filteredPolicies.length}개 정책</strong>
-                  <span>이 조건에 맞습니다.</span>
+                  <strong>총 {totalCount}개 정책</strong>
+                  <span>{resultStart}-{resultEnd}번째 결과를 표시 중입니다.</span>
                 </>
               ) : (
                 <>
@@ -195,7 +182,7 @@ export default function PolicySearchPage() {
             <ErrorState title="정책 목록을 불러오지 못했습니다" description={error} onRetry={refetch} />
           ) : filteredPolicies.length > 0 ? (
             <>
-              <PolicyList policies={pagedPolicies} />
+              <PolicyList policies={filteredPolicies} />
               <Pagination page={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
             </>
           ) : (
