@@ -14,7 +14,7 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-export default function PostDetail({ post }) {
+export default function PostDetail({ post, onLike, isLikeLoading = false, likeError = '' }) {
   return (
     <Card className="community-detail-card">
       <header className="community-detail-header">
@@ -27,10 +27,16 @@ export default function PostDetail({ post }) {
             <Eye size={15} aria-hidden="true" />
             {post.views}
           </span>
-          <span>
+          <button
+            type="button"
+            className={post.isLiked ? 'community-like-button is-liked' : 'community-like-button'}
+            onClick={onLike}
+            disabled={isLikeLoading}
+            aria-pressed={post.isLiked}
+          >
             <ThumbsUp size={15} aria-hidden="true" />
             {post.likes}
-          </span>
+          </button>
           <span>
             <MessageCircle size={15} aria-hidden="true" />
             {post.commentsCount}
@@ -40,6 +46,11 @@ export default function PostDetail({ post }) {
       <div className="community-detail-content">
         <p>{post.content}</p>
       </div>
+      {likeError ? (
+        <p className="community-detail-message" role="alert">
+          {likeError}
+        </p>
+      ) : null}
       <div className="community-detail-tags">
         {post.tags.map((tag) => (
           <span key={tag}>#{tag}</span>

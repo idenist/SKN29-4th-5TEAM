@@ -4,10 +4,10 @@ const rankLabels = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨
 
 export default function PopularSearchItem({ keyword, rank }) {
   const rankClassName = rank <= 3 ? `top-${rank}` : 'default';
-  const searchPath = `/policies?keyword=${encodeURIComponent(keyword)}`;
+  const chatPath = `/chat?message=${encodeURIComponent(keyword)}`;
 
   return (
-    <Link to={searchPath} className="home-popular-pill">
+    <Link to={chatPath} className="home-popular-pill">
       <span className={`home-popular-rank ${rankClassName}`} aria-label={`${rank}위`}>
         {rankLabels[rank - 1] || rank}
       </span>

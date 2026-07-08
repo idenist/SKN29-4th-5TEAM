@@ -19,7 +19,7 @@ export default function HeroSection() {
       <div className="home-hero-inner">
         <div className="home-hero-badge">
           <span aria-hidden="true" />
-          New! 이젠 AI 맞춤형 추천 서비스
+          AI 맞춤형 추천 서비스
         </div>
         <h1 id="home-hero-title">
           청년정책,

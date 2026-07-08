@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ErrorState from '../components/common/ErrorState.jsx';
 import Spinner from '../components/common/Spinner.jsx';
+import CommentPanel from '../components/community/CommentPanel.jsx';
 import PostActionBar from '../components/community/PostActionBar.jsx';
 import PostDetail from '../components/community/PostDetail.jsx';
 import { useAuth } from '../hooks/useAuth.js';
@@ -15,15 +16,18 @@ function getErrorMessage(error) {
 export default function CommunityDetailPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
-  const { user: apiUser } = useAuth();
-  const { post: apiPost, isLoading, error, refetch, updatePost, deletePost } = useCommunityPost(postId);
+  const { user: apiUser, isAuthenticated } = useAuth();
+  const { post: apiPost, isLoading, updatePost, deletePost, toggleLike, createComment } = useCommunityPost(postId);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
+  const [likeError, setLikeError] = useState('');
+  const [commentError, setCommentError] = useState('');
 
-  // 🛡️ 백엔드 미완성 상태 시 가동되는 현재 유저 가상 임시 세팅 (ID: 'yena123')
   const user = useMemo(() => {
-    return apiUser || { id: "yena123", name: "한예나" };
+    return apiUser || null;
   }, [apiUser]);
 
   // 🛡️ UI 무하자 검증을 위한 로컬 방어선 상세 데이터셋 (작성자 ID 분리 배치)
@@ -65,9 +69,45 @@ export default function CommunityDetailPage() {
     }
   };
 
-  if (isLoading && apiPost) {
+  const handleLike = async () => {
+    setLikeError('');
+
+    if (!isAuthenticated) {
+      setLikeError('좋아요는 로그인 후 이용할 수 있습니다.');
+      return;
+    }
+
+    setIsLikeLoading(true);
+    try {
+      await toggleLike();
+    } catch (requestError) {
+      setLikeError(getErrorMessage(requestError));
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
+
+  const handleCreateComment = async (content) => {
+    setCommentError('');
+
+    if (!isAuthenticated) {
+      setCommentError('댓글은 로그인 후 작성할 수 있습니다.');
+      return;
+    }
+
+    setIsCommentSubmitting(true);
+    try {
+      await createComment(content);
+    } catch (requestError) {
+      setCommentError(getErrorMessage(requestError));
+    } finally {
+      setIsCommentSubmitting(false);
+    }
+  };
+
+  if (isLoading && !apiPost) {
     return (
-      <div style={{ backgroundColor: '#f4f5f9', minHeight: '100vh', padding: '40px 60px' }}>
+      <div style={{ backgroundColor: 'transparent', minHeight: '100vh', padding: '40px 60px' }}>
         <Spinner label="게시글을 불러오는 중..." />
       </div>
     );
@@ -77,8 +117,7 @@ export default function CommunityDetailPage() {
   const isOwnPost = user?.id != null && post?.authorId && String(user.id) === String(post.authorId);
 
   return (
-    // 🎨 대시보드 무드에 맞춘 정갈한 연회색 단일 테마 배경 배정
-    <div style={{ backgroundColor: '#f4f5f9', minHeight: '100vh', padding: '40px 60px', fontFamily: 'sans-serif' }}>
+    <div style={{ backgroundColor: 'transparent', minHeight: '100vh', padding: '40px 60px', fontFamily: 'inherit' }}>
       
       {/* 상단 목록 이동 내비게이션 링크 버튼 */}
       <Link 
@@ -105,7 +144,17 @@ export default function CommunityDetailPage() {
 
       {/* 메인 게시글 상세 내용 카드 프레임 */}
       <div style={{ backgroundColor: '#fff', borderRadius: '24px', padding: '35px', border: '1px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.01)', marginBottom: '20px' }}>
-        <PostDetail post={post} />
+        <PostDetail post={post} onLike={handleLike} isLikeLoading={isLikeLoading} likeError={likeError} />
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <CommentPanel
+          comments={post.comments || []}
+          isAuthenticated={isAuthenticated}
+          onSubmit={handleCreateComment}
+          isSubmitting={isCommentSubmitting}
+          error={commentError}
+        />
       </div>
 
       {/* 🛠️ 2번 수정사항 반영 제어부: 작성자 본인(isOwnPost === true) 검증 통과 시에만 수정/삭제 바 출력 */}

@@ -2,7 +2,9 @@ from rest_framework import permissions, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from .models import Comment, CommunityPost
+from apps.common.responses import success_response
+
+from .models import Comment, CommunityPost, CommunityPostLike
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     CommentSerializer,
@@ -25,6 +27,11 @@ class CommunityPostViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return CommunityPostDetailSerializer
         return CommunityPostWriteSerializer
+
+    def get_permissions(self):
+        if self.action == "like":
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -52,6 +59,30 @@ class CommunityPostViewSet(viewsets.ModelViewSet):
             request.session[session_key] = True
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    def like(self, request, *args, **kwargs):
+        post = self.get_object()
+        like, created = CommunityPostLike.objects.get_or_create(
+            post=post,
+            user=request.user,
+        )
+
+        if created:
+            is_liked = True
+            message = "게시글을 좋아요 했습니다."
+        else:
+            like.delete()
+            is_liked = False
+            message = "게시글 좋아요를 취소했습니다."
+
+        return success_response(
+            data={
+                "post_id": post.id,
+                "likes": post.likes.count(),
+                "is_liked": is_liked,
+            },
+            message=message,
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):

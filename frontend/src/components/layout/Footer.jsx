@@ -1,25 +1,18 @@
-import { NavLink } from 'react-router-dom';
-
-const footerLinks = [
-  { to: '/privacy', label: '개인정보처리방침' },
-  { to: '/terms', label: '이용약관' },
-  { to: '/community', label: '문의하기' }
-];
-
 export default function Footer() {
   return (
     <footer className="layout-footer">
       <div className="layout-footer-inner">
         <section className="layout-footer-about">
-          <h2>이젠, 안쉼</h2>
+          <h2>
+            <img className="layout-footer-logo" src="/home_logo.png" alt="" aria-hidden="true" />
+            이젠, 안쉼
+          </h2>
           <p>청년 정책 통합 플랫폼</p>
         </section>
-        <div className="layout-footer-links">
-          {footerLinks.map((link) => (
-            <NavLink key={link.to} to={link.to}>
-              {link.label}
-            </NavLink>
-          ))}
+        <div className="layout-footer-info" aria-label="프로젝트 정보">
+          <p>SK Networks ENCORE</p>
+          <p>SKN-29-똥개녀석들</p>
+          <p>서울 금천구 가산디지털1로 25 18층 플레이데이터</p>
         </div>
       </div>
     </footer>

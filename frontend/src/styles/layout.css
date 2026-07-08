@@ -395,10 +395,20 @@ img.auth-logo-mark {
 
 .layout-footer-about h2,
 .layout-footer-group h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   margin: 0 0 10px;
   color: var(--color-primary);
   font-size: 28px;
   font-weight: 900;
+}
+
+.layout-footer-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  object-fit: cover;
 }
 
 .layout-footer-about p {
@@ -410,21 +420,18 @@ img.auth-logo-mark {
   line-height: 1.7;
 }
 
-.layout-footer-links {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 34px;
+.layout-footer-info {
+  display: grid;
+  gap: 6px;
+  text-align: right;
 }
 
-.layout-footer-links a {
+.layout-footer-info p {
+  margin: 0;
   color: var(--color-text-muted);
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.layout-footer-links a:hover {
-  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .auth-layout {
@@ -497,9 +504,7 @@ img.auth-logo-mark {
     flex-direction: column;
   }
 
-  .layout-footer-links {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
+  .layout-footer-info {
+    text-align: left;
   }
 }

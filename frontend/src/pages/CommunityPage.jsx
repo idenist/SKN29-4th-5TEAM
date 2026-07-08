@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import EmptyState from '../components/common/EmptyState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
 import Pagination from '../components/common/Pagination.jsx';
@@ -139,8 +140,13 @@ export default function CommunityPage() {
                         </span>
                       </td>
                       {/* 제목 링크 */}
-                      <td style={{ padding: '14px 24px', fontWeight: '500', color: '#1e293b', cursor: 'pointer' }}>
-                        {post.title}
+                      <td style={{ padding: '14px 24px', fontWeight: '500', color: '#1e293b' }}>
+                        <Link
+                          to={`/community/${post.id}`}
+                          style={{ color: 'inherit', textDecoration: 'none' }}
+                        >
+                          {post.title}
+                        </Link>
                       </td>
                       {/* 작성자 */}
                       <td style={{ padding: '14px 24px', textAlign: 'center', color: '#475569' }}>

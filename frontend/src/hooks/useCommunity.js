@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  createComment as createCommentRequest,
   createPost as createPostRequest,
   deletePost as deletePostRequest,
   getPostDetail,
   getPosts,
+  togglePostLike,
   updatePost as updatePostRequest
 } from '../services/communityApi.js';
 import { useAuth } from './useAuth.js';
@@ -121,6 +123,44 @@ export function useCommunityPost(postId) {
     await deletePostRequest(postId);
   }, [isAuthenticated, postId]);
 
+  const toggleLike = useCallback(async () => {
+    if (!isAuthenticated) {
+      throw new Error('로그인이 필요한 기능입니다.');
+    }
+
+    const likeState = await togglePostLike(postId);
+    setPost((currentPost) => {
+      if (!currentPost) return currentPost;
+      return {
+        ...currentPost,
+        likes: likeState.likes,
+        isLiked: likeState.isLiked
+      };
+    });
+    return likeState;
+  }, [isAuthenticated, postId]);
+
+  const createComment = useCallback(
+    async (content) => {
+      if (!isAuthenticated) {
+        throw new Error('로그인이 필요한 기능입니다.');
+      }
+
+      const comment = await createCommentRequest(postId, content);
+      setPost((currentPost) => {
+        if (!currentPost) return currentPost;
+        const nextComments = [...(currentPost.comments || []), comment];
+        return {
+          ...currentPost,
+          comments: nextComments,
+          commentsCount: nextComments.length
+        };
+      });
+      return comment;
+    },
+    [isAuthenticated, postId]
+  );
+
   return {
     post,
     isLoading,
@@ -128,6 +168,8 @@ export function useCommunityPost(postId) {
     fetchPostDetail,
     refetch: fetchPostDetail,
     updatePost,
-    deletePost
+    deletePost,
+    toggleLike,
+    createComment
   };
 }
