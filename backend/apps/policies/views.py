@@ -136,8 +136,10 @@ class PolicyListView(generics.ListAPIView):
                 | Q(location__startswith=region_prefix)
                 | Q(location__icontains=region)
             )
+            
         if category:
             queryset = queryset.filter(build_category_query(category))
+        if source_category:
         if source_category:
             queryset = queryset.filter(source_category=source_category)
         if domain:
