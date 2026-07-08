@@ -578,150 +578,84 @@ def generate_answer_rule_based(
     policies: list[dict[str, Any]],
 ) -> str:
     """
-    LLM 없이도 동작하는 안전한 답변 생성기.
-    Streamlit/FastAPI fallback으로 사용할 수 있다.
+    LLM 없이 빠르게 동작하는 짧은 답변 생성기.
+    정책 상세 정보는 recommendations 카드에서 보여주므로,
+    본문 답변은 요약 수준으로만 생성한다.
     """
+
     if not policies:
         return (
             "제공된 데이터에서 조건에 맞는 지원 정보를 찾지 못했습니다. "
             "지역, 나이, 관심 분야 조건을 조금 넓혀 다시 검색해 주세요."
         )
 
-    compact_policies = _compact_policies_for_prompt(policies)
-    collection_label = _get_item_collection_label(compact_policies)
-    condition_summary = _build_condition_summary(user_conditions)
+    age = user_conditions.get("age")
+    region = user_conditions.get("region")
+    employment_status = user_conditions.get("employment_status")
+    interest_domain = user_conditions.get("interest_domain")
 
-    answer_lines = [
-        f"{condition_summary}을 기준으로 제공된 데이터에서 관련 {collection_label}을 찾았습니다.",
-        "",
-        "아래 내용은 검색된 데이터 기준의 안내이며, 신청/참여 가능 여부는 반드시 원문 또는 담당 기관에서 최종 확인해야 합니다.",
-        "",
-    ]
+    condition_parts = []
 
-    for idx, policy in enumerate(compact_policies, start=1):
-        title = policy.get("title") or policy.get("policy_name") or "항목명 없음"
-        item_type_label = policy.get("item_type_label") or "지원 정보"
-        eligibility = policy.get("eligibility") or "추가 확인 필요"
+    if age:
+        condition_parts.append(f"{age}세")
 
-        source_url = policy.get("source_url") or MISSING_TEXT
-        application_url = policy.get("application_url") or MISSING_TEXT
+    if region:
+        condition_parts.append(str(region))
 
-        support_content = policy.get("support_content") or MISSING_TEXT
-        application_period = policy.get("application_period") or MISSING_TEXT
-        application_method = policy.get("application_method") or MISSING_TEXT
-        required_documents = policy.get("required_documents") or MISSING_TEXT
-        deadline_display = policy.get("deadline_display") or _format_deadline_status(policy)
-        is_expired = bool(policy.get("is_expired"))
+    if employment_status:
+        condition_parts.append(str(employment_status))
 
-        matched_conditions = policy.get("matched_conditions") or []
-        missing_conditions = policy.get("missing_conditions") or []
-        cautions = policy.get("cautions") or []
-        blockers = policy.get("blockers") or []
+    if interest_domain:
+        condition_parts.append(f"{interest_domain} 분야")
 
-        reason = f"사용자 질문과 관련성이 높은 {item_type_label}으로 검색되었습니다."
+    condition_text = ", ".join(condition_parts) if condition_parts else "입력하신 조건"
 
-        if is_expired and "마감" not in "\n".join(blockers + cautions):
-            cautions.append("마감된 항목일 수 있으므로 현재 신청 가능 항목으로 단정하지 않습니다.")
+    titles = []
 
-        if blockers:
-            reason = "검색 결과에는 포함되었지만, 일부 조건이 맞지 않을 가능성이 있습니다."
-        elif eligibility == "가능성 높음":
-            reason = "검색된 데이터 기준으로 주요 조건이 비교적 잘 충족됩니다."
-        elif eligibility == "추가 확인 필요":
-            reason = "검색된 데이터 기준으로 관련성이 있으나, 일부 조건은 원문 확인이 필요합니다."
+    for idx, policy in enumerate(policies[:3], start=1):
+        metadata = policy.get("metadata") or {}
 
-        answer_lines.extend(
-            [
-                f"### {idx}. {title}",
-                f"- 항목 유형: {item_type_label}",
-                f"- 추천 이유: {reason}",
-                f"- 신청/참여 가능성: {eligibility}",
-                f"- 마감 상태: {deadline_display}",
-                "- 충족 조건:",
-                _format_list(matched_conditions),
-                "- 추가 확인 필요:",
-                _format_list(missing_conditions),
-            ]
+        title = (
+            policy.get("title")
+            or policy.get("policy_name")
+            or metadata.get("title")
+            or metadata.get("policy_name")
+            or "추천 정책"
         )
 
-        if blockers:
-            answer_lines.extend(
-                [
-                    "- 불충족 가능 조건:",
-                    _format_list(blockers),
-                ]
-            )
+        titles.append(f"{idx}. {title}")
 
-        if item_type_label == "교육훈련 과정":
-            answer_lines.extend(
-                [
-                    f"- 주요 내용: {support_content}",
-                    f"- 훈련 기간: {application_period}",
-                    f"- 훈련 기관: {policy.get('training_institution') or MISSING_TEXT}",
-                    f"- 훈련 대상: {policy.get('training_target') or MISSING_TEXT}",
-                    f"- 훈련비/지원 정보: {policy.get('training_cost') or MISSING_TEXT}",
-                    f"- 지역: {policy.get('region') or MISSING_TEXT}",
-                    f"- 신청/접수 방법: {application_method}",
-                    f"- 제출 서류: {required_documents}",
-                ]
-            )
-        else:
-            answer_lines.extend(
-                [
-                    f"- 주요 내용: {support_content}",
-                    f"- 신청/접수 기간: {application_period}",
-                    f"- 신청/접수 방법: {application_method}",
-                    f"- 제출 서류: {required_documents}",
-                ]
-            )
-
-        answer_lines.extend(
-            [
-                f"- 출처 URL: {source_url}",
-                f"- 신청 URL: {application_url}",
-                "- 유의사항:",
-                _format_list(cautions),
-                "",
-            ]
-        )
-
-    return "\n".join(answer_lines).strip()
-
+    return (
+        f"입력하신 조건({condition_text})을 기준으로 관련 정책 {len(titles)}개를 찾았습니다.\n\n"
+        + "\n".join(titles)
+        + "\n\n자세한 자격 조건, 신청 기간, 제출서류는 아래 추천 카드와 원문 링크에서 확인해 주세요."
+    )
 
 def generate_answer(
     query: str,
     user_conditions: dict[str, Any],
     policies: list[dict[str, Any]],
     use_llm: bool = True,
-    graph_context: str = "",          # ← 추가
+    graph_context: str = "",
     route: str = "",
 ) -> str:
     """
     최종 Answer Generator 진입점.
 
-    기본은 LLM 사용.
-    LLM 호출 실패 시 rule-based 답변으로 fallback한다.
+    속도 개선:
+    - 추천 후보가 있으면 LLM 장문 생성을 생략하고 rule-based 답변을 즉시 반환한다.
+    - 정책 카드는 recommendations로 따로 내려가므로, 본문 답변은 빠르게 생성한다.
     """
-    if use_llm:
-        try:
-            return generate_answer_with_llm(
-                query=query,
-                user_conditions=user_conditions,
-                policies=policies,
-                graph_context=graph_context,   # ← 추가
-                route=route,          # ← 추가
-            )
-        except Exception as e:
-            fallback_answer = generate_answer_rule_based(
-                query=query,
-                user_conditions=user_conditions,
-                policies=policies,
-            )
-            return (
-                f"{fallback_answer}\n\n"
-                f"※ LLM 답변 생성 중 오류가 발생하여 규칙 기반 답변으로 대체했습니다: {repr(e)}"
-            )
 
+    # 추천 결과가 있으면 OpenAI 호출 없이 바로 답변 생성
+    if policies:
+        return generate_answer_rule_based(
+            query=query,
+            user_conditions=user_conditions,
+            policies=policies,
+        )
+
+    # 추천 결과가 없을 때도 굳이 LLM을 부르지 않고 빠르게 안내
     return generate_answer_rule_based(
         query=query,
         user_conditions=user_conditions,

@@ -63,15 +63,18 @@ function isDefaultFilters(filters) {
 
 export default function PolicySearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const keywordParam = searchParams.get('keyword') || '';
+
   const [keyword, setKeyword] = useState(keywordParam);
   const [submittedKeyword, setSubmittedKeyword] = useState(keywordParam);
   const [filters, setFilters] = useState(() => getFiltersFromSearchParams(searchParams));
   const [page, setPage] = useState(() => getPageFromSearchParams(searchParams));
+
   const hasSearchCondition = Boolean(submittedKeyword.trim()) || !isDefaultFilters(filters);
 
-  const queryParams = useMemo(
-    () => ({
+  const queryParams = useMemo(() => {
+    return {
       keyword: submittedKeyword,
       age: filters.age,
       region: filters.region,
@@ -81,9 +84,17 @@ export default function PolicySearchPage() {
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
       enabled: hasSearchCondition
-    }),
-    [submittedKeyword, filters.age, filters.category, filters.region, filters.status, filters.income, page, hasSearchCondition]
-  );
+    };
+  }, [
+    submittedKeyword,
+    filters.age,
+    filters.category,
+    filters.region,
+    filters.status,
+    filters.income,
+    page,
+    hasSearchCondition
+  ]);
 
   const { policies, totalCount, isLoading, error, refetch } = usePolicyList(queryParams);
 
@@ -106,6 +117,7 @@ export default function PolicySearchPage() {
 
   const handleSearch = () => {
     const nextKeyword = keyword.trim();
+
     setSubmittedKeyword(nextKeyword);
     setSearchParams(buildPolicySearchParams(nextKeyword, filters));
     setPage(1);
@@ -164,8 +176,13 @@ export default function PolicySearchPage() {
                 </>
               )}
             </div>
+
             {hasSearchCondition ? (
-              submittedKeyword ? <p>검색어: {submittedKeyword}</p> : <p>선택한 필터 조건으로 검색 중입니다.</p>
+              submittedKeyword ? (
+                <p>검색어: {submittedKeyword}</p>
+              ) : (
+                <p>선택한 필터 조건으로 검색 중입니다.</p>
+              )
             ) : (
               <p>아직 검색 조건이 없습니다.</p>
             )}

@@ -234,6 +234,24 @@ SOURCE_CATEGORY_KEYWORDS = {
     ],
 }
 
+def infer_source_category_from_route_and_query(route: str, query: str) -> str | None:
+    q = (query or "").lower()
+
+    if any(k in q for k in [
+        "국비", "내일배움", "훈련", "교육과정", "부트캠프", "kdt", "직업훈련"
+    ]):
+        return "training"
+
+    if any(k in q for k in [
+        "창업", "예비창업", "사업화", "스타트업", "k-startup", "입주기업"
+    ]):
+        return "startup_notice"
+
+    if route in {"일자리", "주거", "금융", "복지문화", "참여권리"}:
+        return "policy"
+
+    return None
+
 def _append_warning(state: GraphState, message: str) -> list[str]:
     return state.get("warnings", []) + [message]
 
@@ -758,10 +776,26 @@ def route_source_category(
             scores["policy"] += 2
 
     # 일자리는 애매하므로 강하게 고정하지 않음
+    # 일자리 질문은 기본적으로 청년정책(policy)을 우선 검색한다.
+    # 단, 훈련/국비/내일배움/KDT처럼 교육훈련 의도가 명확하면 training으로 보낸다.
     if route == "일자리":
-        if any(word in text for word in ["훈련", "교육과정", "직업훈련", "k-digital", "kdt"]):
-            scores["training"] += 2
-        elif any(word in text for word in ["면접수당", "취업지원금", "청년수당"]):
+        if any(word in text for word in [
+            "훈련",
+            "교육과정",
+            "직업훈련",
+            "국비",
+            "국비지원",
+            "내일배움",
+            "국민내일배움카드",
+            "k-digital",
+            "kdt",
+            "부트캠프",
+            "개발자 과정",
+            "데이터 분석 과정",
+            "ai 과정",
+        ]):
+            scores["training"] += 3
+        else:
             scores["policy"] += 2
 
     best_category = max(scores, key=scores.get)
