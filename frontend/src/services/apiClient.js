@@ -6,7 +6,7 @@ export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
