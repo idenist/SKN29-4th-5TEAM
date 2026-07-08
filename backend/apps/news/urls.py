@@ -1,7 +1,6 @@
 from django.urls import path
-
-app_name = "news"
+from .views import news_list
 
 urlpatterns = [
-    # TODO: news 앱의 URL 패턴 추가
+    path("", news_list, name="news-list"),
 ]
