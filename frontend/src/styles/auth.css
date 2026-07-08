@@ -36,6 +36,18 @@
   gap: var(--space-4);
 }
 
+.auth-inline-link {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.auth-inline-link a {
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+}
+
 .auth-profile-grid {
   display: grid;
   gap: var(--space-4);

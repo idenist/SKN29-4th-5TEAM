@@ -20,9 +20,20 @@ export function usePolicyList(params = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const stableParams = useMemo(() => params, [params.keyword, params.region, params.sourceCategory, params.category, params.age]);
+  const enabled = params.enabled ?? true;
+  const stableParams = useMemo(
+    () => params,
+    [params.keyword, params.region, params.sourceCategory, params.category, params.age, params.enabled]
+  );
 
   const fetchPolicies = useCallback(async () => {
+    if (!enabled) {
+      setPolicies([]);
+      setIsLoading(false);
+      setError('');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -35,7 +46,7 @@ export function usePolicyList(params = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [stableParams]);
+  }, [enabled, stableParams]);
 
   useEffect(() => {
     fetchPolicies();

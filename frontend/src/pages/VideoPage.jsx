@@ -12,7 +12,7 @@ const VideoPage = () => {
       try {
         setIsLoading(true);
         
-        // 📜 입력해주신 video_info 데이터 30개 전수 적재 및 문법 오류 교정 완료[cite: 1]
+        // 📜 video_info 데이터 30개 정제 세팅 완료
         setVideoList([
           {
             "id": 1,
@@ -259,7 +259,7 @@ const VideoPage = () => {
   if (videoList.length === 0) return <div style={{ padding: '40px', minHeight: '100vh', textAlign: 'center' }}>표시할 영상이 없습니다.</div>;
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', padding: '40px 60px', backgroundColor: '#f4f5f9' }}>
       
       <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '35px', width: '100%' }}>
         <div style={{ flexGrow: 1 }}>
@@ -267,7 +267,7 @@ const VideoPage = () => {
         </div>
       </div>
 
-      {/* 📊 설계서의 넓은 2열(2-Column Grid) 종횡비 전용 배치 적용 */}
+      {/* 📊 넓은 2열(2-Column Grid) 카드 배치 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(48%, 1fr))', gap: '30px' }}>
         {videoList.map((video) => (
           <div 
@@ -276,51 +276,75 @@ const VideoPage = () => {
               display: 'flex', 
               flexDirection: 'column', 
               backgroundColor: '#fff', 
-              borderRadius: '20px', // 라운딩 볼륨 확대
+              borderRadius: '20px', 
               overflow: 'hidden', 
-              boxShadow: '0 10px 25px rgba(0,0,0,0.03)', // 세련된 쉐도우
-              border: '1px solid #eef0f5' 
+              boxShadow: '0 10px 25px rgba(0,0,0,0.03)', 
+              border: '1px solid #eef0f5'
             }}
           >
-            {/* 16:9 최우선 반응형 스크린 레이어 */}
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', backgroundColor: '#000' }}>
+            {/* 📸 0.1초 인스턴트 로딩 영역: 유튜브 초고속 이미지 서버(CDN) 즉시 연동 */}
+            <div 
+              onClick={() => setSelectedVideo(video)}
+              style={{ 
+                position: 'relative', 
+                width: '100%', 
+                aspectRatio: '16 / 9', 
+                backgroundColor: '#e5e7eb',
+                cursor: 'pointer',
+                overflow: 'hidden'
+              }}
+            >
+              {/* 유튜브 고화질 공식 썸네일 이미지 매핑 */}
+              <img 
+                src={`https://img.youtube.com/vi/${video.embedId}/hqdefault.jpg`} 
+                alt={video.title}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+              />
               
-              {/* 안전 자산 백그라운드 텍스트 */}
-              <span style={{ position: 'absolute', color: '#555', fontSize: '14px', zIndex: 0, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                현재 영상을 불러올 수 없습니다.
-              </span>
-
-              {/* 임베딩 iframe (자동재생 파라미터 제외 차단 적용) */}
-              <iframe
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', border: '0' }}
-                src={`https://www.youtube.com/embed/${video.embedId}`}
-                title={video.title}
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-              <button
-                type="button"
-                className="video-theater-trigger"
-                onClick={() => setSelectedVideo(video)}
-                aria-label={`${video.title} 영화관 모드로 보기`}
+              {/* 마우스 호버 및 직관성을 위한 재생 오버레이 레이어 */}
+              <div 
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: 'rgba(0,0,0,0.15)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}
               >
-                <Play size={20} aria-hidden="true" />
-                크게 보기
-              </button>
+                <div 
+                  style={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                    borderRadius: '50%', 
+                    padding: '14px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  <Play size={24} fill="#111" stroke="#111" style={{ marginLeft: '2px' }} />
+                </div>
+              </div>
             </div>
             
             {/* 텍스트 내용 메타 데이터 파트 */}
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-              {/* 제목 두껍게 강조 처리 */}
               <h3 style={{ margin: '0 0 8px 0', fontSize: '17px', fontWeight: 'bold', color: '#1a1a1a', lineHeight: '1.4' }}>
                 {video.title}
               </h3>
-              {/* 회색 요약 안내 문구 */}
               <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#6b7280', lineHeight: '1.5', flexGrow: 1 }}>
                 {video.description}
               </p>
               
-              {/* 🔵 설계서 지정 - "출처:" 글자 없이 선명한 블루 계열 단독 출처 텍스트 표기 */}
               <div style={{ marginTop: 'auto' }}>
                 <span style={{ color: '#2563eb', fontWeight: '600', fontSize: '13px' }}>
                   {video.source}
@@ -332,9 +356,9 @@ const VideoPage = () => {
         ))}
       </div>
 
+      {/* 🎬 영화관 모드 극장 레이어 (클릭 시 팝업 형태로 고화질 자동 재생) */}
       {selectedVideo ? (
         <div
-          className="video-theater-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="video-theater-title"
@@ -343,28 +367,56 @@ const VideoPage = () => {
               setSelectedVideo(null);
             }
           }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
         >
-          <div className="video-theater-dialog">
+          <div style={{ position: 'relative', width: '100%', maxWidth: '1000px', backgroundColor: '#fff', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
             <button
               type="button"
-              className="video-theater-close"
               onClick={() => setSelectedVideo(null)}
               aria-label="영화관 모드 닫기"
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                zIndex: 10000,
+                backgroundColor: 'rgba(255,255,255,0.9)',
+                border: '0',
+                borderRadius: '50%',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
             >
-              <X size={22} aria-hidden="true" />
+              <X size={22} color="#111" aria-hidden="true" />
             </button>
-            <div className="video-theater-player">
+            <div style={{ width: '100%', aspectRatio: '16 / 9', backgroundColor: '#000' }}>
               <iframe
                 src={`https://www.youtube.com/embed/${selectedVideo.embedId}?autoplay=1`}
                 title={selectedVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                style={{ width: '100%', height: '100%', border: '0' }}
               ></iframe>
             </div>
-            <div className="video-theater-info">
-              <h2 id="video-theater-title">{selectedVideo.title}</h2>
-              <p>{selectedVideo.description}</p>
-              <span>{selectedVideo.source}</span>
+            <div style={{ padding: '30px', backgroundColor: '#fff' }}>
+              <h2 id="video-theater-title" style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#111' }}>{selectedVideo.title}</h2>
+              <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#4b5563', lineHeight: '1.6' }}>{selectedVideo.description}</p>
+              <span style={{ color: '#2563eb', fontWeight: '600', fontSize: '14px' }}>{selectedVideo.source}</span>
             </div>
           </div>
         </div>

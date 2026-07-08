@@ -5,32 +5,153 @@
 
 .policy-search-layout {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   align-items: start;
   gap: var(--space-6);
 }
 
-.policy-filter-panel {
+.policy-condition-sidebar {
   position: sticky;
   top: 96px;
+  display: grid;
+  gap: var(--space-7, 1.75rem);
 }
 
-.policy-filter-header {
+.policy-condition-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-5, 1.25rem);
 }
 
-.policy-filter-header h2 {
+.policy-condition-title-row .ui-button {
+  flex: 0 0 auto;
+}
+
+.policy-condition-title {
   margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.policy-condition-reset {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.policy-condition-reset:hover {
+  border-color: var(--color-primary);
+  background: rgb(37 99 235 / 0.08);
+  color: var(--color-primary);
+}
+
+.policy-condition-card {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.policy-condition-age-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.policy-condition-age-field label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 900;
+}
+
+.policy-condition-age-field input,
+.policy-condition-select {
+  min-height: 54px;
+  border-radius: 14px;
   font-size: var(--font-size-lg);
 }
 
-.policy-filter-fields {
+.policy-condition-age-field input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  padding: 0 var(--space-4);
+  outline: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.policy-condition-age-field input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 0.12);
+}
+
+.policy-condition-age-field input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.policy-condition-age-field input::-webkit-outer-spin-button,
+.policy-condition-age-field input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.policy-condition-apply {
+  min-height: 56px;
+  border-color: #d77d7a;
+  background: #d77d7a;
+  color: #fff;
+  font-size: var(--font-size-lg);
+}
+
+.policy-condition-apply:hover {
+  border-color: #c96f6c;
+  background: #c96f6c;
+}
+
+.policy-condition-tip {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  margin-top: var(--space-8, 2rem);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid #cfd9ff;
+  border-radius: 8px;
+  background: #f3f6ff;
+  color: #314f9f;
+  line-height: 1.65;
+}
+
+.policy-condition-tip strong {
+  font-size: var(--font-size-lg);
+}
+
+.policy-condition-tip ul {
+  margin: 0;
+  padding-left: 1.05rem;
+}
+
+.policy-condition-tip li {
+  padding-left: var(--space-1);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.policy-condition-tip li + li {
+  margin-top: var(--space-2);
+}
+
+.policy-condition-tip li::marker {
+  color: #314f9f;
+  font-size: 0.8em;
 }
 
 .policy-results {
@@ -391,12 +512,8 @@
     grid-template-columns: 1fr;
   }
 
-  .policy-filter-panel {
+  .policy-condition-sidebar {
     position: static;
-  }
-
-  .policy-filter-fields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .policy-detail-layout {
@@ -413,7 +530,6 @@
     grid-template-columns: 1fr;
   }
 
-  .policy-filter-fields,
   .policy-card-top,
   .policy-card-support,
   .policy-result-toolbar,
@@ -424,9 +540,8 @@
     flex-direction: column;
   }
 
-  .policy-filter-fields {
-    display: grid;
-    grid-template-columns: 1fr;
+  .policy-condition-title {
+    font-size: var(--font-size-lg);
   }
 
   .policy-card-info {

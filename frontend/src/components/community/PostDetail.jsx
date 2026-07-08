@@ -18,7 +18,7 @@ export default function PostDetail({ post }) {
   return (
     <Card className="community-detail-card">
       <header className="community-detail-header">
-        <Badge variant="primary">{post.category}</Badge>
+        <Badge variant="primary">{post.categoryLabel}</Badge>
         <h1>{post.title}</h1>
         <div className="community-detail-meta">
           <span>{post.author}</span>

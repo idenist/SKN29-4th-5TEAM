@@ -5,7 +5,7 @@ export default function AuthLayout() {
     <main className="auth-layout">
       <section className="auth-card" aria-label="auth">
         <NavLink to="/" className="auth-logo" aria-label="Go to home">
-          <span className="auth-logo-mark">EA</span>
+          <img className="auth-logo-mark" src="/home_logo.png" alt="" aria-hidden="true" />
           <span>이젠, 안쉼</span>
         </NavLink>
         <Outlet />

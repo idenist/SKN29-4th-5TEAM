@@ -6,8 +6,8 @@ export const getPosts = async () => {
   return adaptCommunityPosts(posts);
 };
 
-export const createPost = async ({ title, content }) => {
-  const post = await apiClient.post('/community/posts/', { title, content });
+export const createPost = async ({ title, content, category = 'general' }) => {
+  const post = await apiClient.post('/community/posts/', { title, content, category });
   return adaptCommunityPost(post);
 };
 

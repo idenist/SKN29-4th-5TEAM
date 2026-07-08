@@ -6,12 +6,17 @@ import ProfileFields from '../components/auth/ProfileFields.jsx';
 import RegionSelect from '../components/auth/RegionSelect.jsx';
 import Button from '../components/common/Button.jsx';
 import Input from '../components/common/Input.jsx';
-import { signup } from '../services/authApi.js';
+import {
+  confirmSignupVerificationEmail,
+  sendSignupVerificationEmail,
+  signup
+} from '../services/authApi.js';
 
 const interestOptions = ['주거', '금융', '취업', '교육', '창업'];
 
 const initialValues = {
   email: '',
+  verificationCode: '',
   password: '',
   passwordConfirm: '',
   name: '',
@@ -21,10 +26,11 @@ const initialValues = {
   interests: []
 };
 
-function validate(values) {
+function validate(values, isEmailVerified) {
   const errors = {};
 
   if (!values.email.trim()) errors.email = '이메일을 입력해 주세요.';
+  if (!isEmailVerified) errors.verificationCode = '이메일 인증을 완료해 주세요.';
   if (!values.password) errors.password = '비밀번호를 입력해 주세요.';
   if (values.password && values.password.length < 8) errors.password = '비밀번호는 8자 이상이어야 합니다.';
   if (!values.passwordConfirm) errors.passwordConfirm = '비밀번호 확인을 입력해 주세요.';
@@ -44,11 +50,11 @@ function getUsername(values) {
   return values.nickname.trim() || values.email.split('@')[0] || values.email;
 }
 
-function getErrorMessage(error) {
+function getErrorMessage(error, fallback) {
   const apiMessage = error?.responseData?.message;
   const apiReason = error?.responseData?.error?.reason;
 
-  return apiReason || apiMessage || '회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+  return apiReason || apiMessage || fallback;
 }
 
 export default function SignupPage() {
@@ -56,6 +62,9 @@ export default function SignupPage() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isCheckingCode, setIsCheckingCode] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [message, setMessage] = useState('');
   const [formError, setFormError] = useState('');
 
@@ -64,6 +73,10 @@ export default function SignupPage() {
     setErrors((current) => ({ ...current, [key]: '' }));
     setMessage('');
     setFormError('');
+
+    if (key === 'email' || key === 'verificationCode') {
+      setIsEmailVerified(false);
+    }
   };
 
   const toggleInterest = (interest) => {
@@ -81,9 +94,55 @@ export default function SignupPage() {
     setFormError('');
   };
 
+  const handleSendCode = async () => {
+    if (!values.email.trim()) {
+      setErrors((current) => ({ ...current, email: '이메일을 입력해 주세요.' }));
+      return;
+    }
+
+    setIsSendingCode(true);
+    setFormError('');
+    setMessage('');
+
+    try {
+      await sendSignupVerificationEmail({ email: values.email.trim() });
+      setMessage('인증번호를 이메일로 보냈습니다.');
+    } catch (error) {
+      setFormError(getErrorMessage(error, '인증번호 발송 중 문제가 발생했습니다.'));
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleConfirmCode = async () => {
+    if (!values.email.trim() || !values.verificationCode.trim()) {
+      setErrors((current) => ({ ...current, verificationCode: '인증번호를 입력해 주세요.' }));
+      return;
+    }
+
+    setIsCheckingCode(true);
+    setFormError('');
+    setMessage('');
+
+    try {
+      await confirmSignupVerificationEmail({
+        email: values.email.trim(),
+        code: values.verificationCode.trim()
+      });
+      setIsEmailVerified(true);
+      setMessage('이메일 인증이 완료되었습니다.');
+      setErrors((current) => ({ ...current, verificationCode: '' }));
+    } catch (error) {
+      setIsEmailVerified(false);
+      setFormError(getErrorMessage(error, '인증번호 확인 중 문제가 발생했습니다.'));
+    } finally {
+      setIsCheckingCode(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const nextErrors = validate(values);
+    const nextErrors = validate(values, isEmailVerified);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) return;
@@ -94,16 +153,17 @@ export default function SignupPage() {
 
     try {
       await signup({
-        email: values.email,
+        email: values.email.trim(),
         username: getUsername(values),
         password: values.password,
-        passwordConfirm: values.passwordConfirm
+        passwordConfirm: values.passwordConfirm,
+        verificationCode: values.verificationCode.trim()
       });
 
       setMessage('회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.');
       window.setTimeout(() => navigate('/login'), 700);
     } catch (error) {
-      setFormError(getErrorMessage(error));
+      setFormError(getErrorMessage(error, '회원가입 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +173,7 @@ export default function SignupPage() {
     <AuthCard
       kicker="Create account"
       title="회원가입"
-      description="맞춤 정책 추천을 위해 기본 프로필을 입력해 주세요."
+      description="이메일 인증 후 맞춤 정책 추천을 위한 기본 프로필을 입력해 주세요."
       footer={
         <p>
           이미 계정이 있나요? <Link to="/login">로그인</Link>
@@ -136,6 +196,21 @@ export default function SignupPage() {
           autoComplete="email"
           required
         />
+        <Button type="button" variant="secondary" fullWidth onClick={handleSendCode} disabled={isSendingCode}>
+          {isSendingCode ? '발송 중...' : '인증번호 받기'}
+        </Button>
+        <Input
+          label="이메일 인증번호"
+          value={values.verificationCode}
+          onChange={(event) => updateValue('verificationCode', event.target.value)}
+          placeholder="6자리 인증번호"
+          error={errors.verificationCode}
+          inputMode="numeric"
+          required
+        />
+        <Button type="button" variant="secondary" fullWidth onClick={handleConfirmCode} disabled={isCheckingCode}>
+          {isCheckingCode ? '확인 중...' : isEmailVerified ? '인증 완료' : '인증번호 확인'}
+        </Button>
         <Input
           label="비밀번호"
           type="password"
@@ -181,7 +256,7 @@ export default function SignupPage() {
           </div>
           {errors.interests ? <p className="ui-error">{errors.interests}</p> : null}
         </fieldset>
-        <Button type="submit" fullWidth disabled={isSubmitting}>
+        <Button type="submit" fullWidth disabled={isSubmitting || !isEmailVerified}>
           {isSubmitting ? '가입 처리 중...' : '회원가입'}
         </Button>
       </AuthForm>

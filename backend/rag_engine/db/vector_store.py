@@ -16,6 +16,18 @@ DEFAULT_VECTOR_DB_DIR = PROJECT_ROOT / "data" / "vector_db"
 load_dotenv()
 
 
+def resolve_vector_db_dir(persist_dir: str | None = None) -> Path:
+    configured_dir = persist_dir or os.getenv("CHROMA_PERSIST_DIR")
+
+    if configured_dir:
+        path = Path(configured_dir)
+        if path.is_absolute():
+            return path.resolve()
+        return (PROJECT_ROOT / path).resolve()
+
+    return DEFAULT_VECTOR_DB_DIR.resolve()
+
+
 @dataclass
 class VectorSearchResult:
     chunk_id: str
@@ -44,13 +56,7 @@ class YouthPolicyVectorStore:
         collection_name="youth_opportunity_chunks",
         embedding_model: Optional[str] = None,
     ):
-        self.persist_dir = str(
-            Path(
-                persist_dir
-                or os.getenv("CHROMA_PERSIST_DIR")
-                or DEFAULT_VECTOR_DB_DIR
-            ).resolve()
-        )
+        self.persist_dir = str(resolve_vector_db_dir(persist_dir))
         self.collection_name = collection_name
         self.embedding_model = (
             embedding_model

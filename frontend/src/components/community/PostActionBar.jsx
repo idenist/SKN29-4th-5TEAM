@@ -33,7 +33,11 @@ export default function PostActionBar({
         </Button>
       </div>
       {message ? <p className="community-action-message">{message}</p> : null}
-      {error ? <p className="community-action-message" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="community-action-message" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <PostEditorModal
         isOpen={isEditOpen}
@@ -41,11 +45,12 @@ export default function PostActionBar({
         onSubmit={handleUpdate}
         isSubmitting={isSubmitting}
         error={error}
+        initialCategory={post?.category || 'general'}
         initialTitle={post?.title || ''}
         initialContent={post?.content || ''}
         submitLabel="수정"
         title="게시글 수정"
-        description="제목과 내용을 수정합니다."
+        description="카테고리, 제목, 내용을 수정합니다."
       />
     </Card>
   );
