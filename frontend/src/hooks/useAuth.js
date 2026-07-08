@@ -1,5 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getMe as fetchMe } from '../services/authApi';
+import { AUTH_SESSION_EXPIRED_EVENT } from '../services/apiClient';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -28,18 +29,21 @@ export function AuthProvider({ children }) {
   const [refreshToken, setRefreshToken] = useState(() => readToken(REFRESH_TOKEN_KEY));
   const [user, setUser] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState('');
 
   const login = useCallback((tokens) => {
     saveTokens(tokens);
     setAccessToken(tokens.access || '');
     setRefreshToken(tokens.refresh || '');
+    setSessionMessage('');
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((message = '') => {
     clearTokens();
     setAccessToken('');
     setRefreshToken('');
     setUser(null);
+    setSessionMessage(message);
   }, []);
 
   const loadMe = useCallback(async () => {
@@ -65,6 +69,19 @@ export function AuthProvider({ children }) {
     }
   }, [accessToken, loadMe]);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      logout('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+    };
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [logout]);
+
+  const clearSessionMessage = useCallback(() => {
+    setSessionMessage('');
+  }, []);
+
   const value = useMemo(
     () => ({
       accessToken,
@@ -72,11 +89,13 @@ export function AuthProvider({ children }) {
       user,
       isLoadingUser,
       isAuthenticated: Boolean(accessToken),
+      sessionMessage,
       login,
       logout,
-      loadMe
+      loadMe,
+      clearSessionMessage
     }),
-    [accessToken, refreshToken, user, isLoadingUser, login, logout, loadMe]
+    [accessToken, refreshToken, user, isLoadingUser, sessionMessage, login, logout, loadMe, clearSessionMessage]
   );
 
   return createElement(AuthContext.Provider, { value }, children);

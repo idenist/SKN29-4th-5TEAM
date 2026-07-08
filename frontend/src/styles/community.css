@@ -290,11 +290,16 @@
   background: var(--color-surface-muted);
 }
 
-.community-comment-item div {
+.community-comment-meta,
+.community-comment-meta div {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+.community-comment-meta div {
+  justify-content: flex-start;
 }
 
 .community-comment-item strong {

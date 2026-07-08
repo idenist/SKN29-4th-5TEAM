@@ -15,6 +15,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-4);
+  min-height: 156px;
 }
 
 .mypage-profile-actions {
@@ -71,7 +72,9 @@
 
 .mypage-summary-card {
   display: grid;
+  align-content: center;
   gap: var(--space-2);
+  min-height: 112px;
 }
 
 .mypage-summary-card span {
@@ -94,6 +97,7 @@
 
 .mypage-tabs-panel,
 .mypage-notifications {
+  min-height: 360px;
   padding: var(--space-6);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -123,6 +127,13 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  min-height: 104px;
+}
+
+.mypage-policy-item > div,
+.mypage-history-item > div,
+.mypage-notification-item > div {
+  min-width: 0;
 }
 
 .mypage-policy-item h3,
@@ -136,6 +147,10 @@
 .mypage-policy-item h3 {
   margin-top: var(--space-2);
   font-size: var(--font-size-lg);
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .mypage-policy-item p,
@@ -164,6 +179,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+  min-height: 104px;
   padding: var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
@@ -261,6 +277,13 @@
 
 .profile-edit-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.profile-edit-actions > div {
+  display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
 }
@@ -281,6 +304,10 @@
   .mypage-notification-item,
   .profile-edit-actions {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-edit-actions > div {
     flex-direction: column;
   }
 

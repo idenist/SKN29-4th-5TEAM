@@ -83,10 +83,13 @@ export default function PolicySearchPage() {
       keyword: submittedKeyword,
       age: filters.age,
       region: filters.region,
-      sourceCategory: filters.category,
+      category: filters.category,
+      status: filters.status,
+      income: filters.income,
+      limit: 100,
       enabled: hasSearchCondition
     }),
-    [submittedKeyword, filters.age, filters.category, filters.region, hasSearchCondition]
+    [submittedKeyword, filters.age, filters.category, filters.region, filters.status, filters.income, hasSearchCondition]
   );
 
   const { policies, isLoading, error, refetch } = usePolicyList(queryParams);
@@ -96,6 +99,7 @@ export default function PolicySearchPage() {
 
     return policies.filter((policy) => {
       return (
+        matchesFilter(policy.category, filters.category) &&
         matchesFilter(policy.status, filters.status) &&
         matchesIncome(policy.income, filters.income)
       );

@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'indexes': [models.Index(fields=['post'], name='community_l_post_id_4ab6ad_idx')],
-                'constraints': [models.UniqueConstraint(fields=('post', 'user'), name='unique_community_post_like')],
+                'constraints': [models.UniqueConstraint(fields=('post', 'user'), name='unique_community_like')],
             },
         ),
     ]

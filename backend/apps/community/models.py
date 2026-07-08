@@ -61,7 +61,7 @@ class Like(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["post", "user"], name="unique_community_post_like"),
+            models.UniqueConstraint(fields=["post", "user"], name="unique_community_like"),
         ]
         indexes = [
             models.Index(fields=["post"]),

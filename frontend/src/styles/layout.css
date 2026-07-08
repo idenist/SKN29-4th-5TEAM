@@ -13,6 +13,27 @@
   background: #fff;
 }
 
+.layout-session-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+}
+
+.layout-session-banner a {
+  border: 0;
+  background: transparent;
+  color: #c2410c;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .layout-header-inner,
 .layout-footer-inner {
   width: min(1368px, calc(100% - 32px));

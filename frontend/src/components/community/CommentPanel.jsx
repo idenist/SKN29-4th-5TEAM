@@ -17,8 +17,11 @@ function formatDate(value) {
 export default function CommentPanel({
   comments = [],
   isAuthenticated = false,
+  currentUserId = '',
   onSubmit,
+  onDelete,
   isSubmitting = false,
+  deletingCommentId = '',
   error = ''
 }) {
   const [content, setContent] = useState('');
@@ -41,15 +44,32 @@ export default function CommentPanel({
 
       <div className="community-comment-list">
         {comments.length > 0 ? (
-          comments.map((comment) => (
-            <article key={comment.id} className="community-comment-item">
-              <div>
-                <strong>{comment.author}</strong>
-                <time dateTime={comment.createdAt}>{formatDate(comment.createdAt)}</time>
-              </div>
-              <p>{comment.content}</p>
-            </article>
-          ))
+          comments.map((comment) => {
+            const canDelete = currentUserId && String(comment.authorId) === String(currentUserId);
+
+            return (
+              <article key={comment.id} className="community-comment-item">
+                <div className="community-comment-meta">
+                  <div>
+                    <strong>{comment.author}</strong>
+                    <time dateTime={comment.createdAt}>{formatDate(comment.createdAt)}</time>
+                  </div>
+                  {canDelete ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete?.(comment.id)}
+                      disabled={String(deletingCommentId) === String(comment.id)}
+                    >
+                      삭제
+                    </Button>
+                  ) : null}
+                </div>
+                <p>{comment.content}</p>
+              </article>
+            );
+          })
         ) : (
           <p className="community-comment-empty">아직 댓글이 없습니다.</p>
         )}
