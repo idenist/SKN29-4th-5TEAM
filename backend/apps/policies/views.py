@@ -136,23 +136,26 @@ class PolicyListView(generics.ListAPIView):
                 | Q(location__startswith=region_prefix)
                 | Q(location__icontains=region)
             )
-            
+
         if category:
             queryset = queryset.filter(build_category_query(category))
-        if source_category:
+
         if source_category:
             queryset = queryset.filter(source_category=source_category)
         if domain:
             queryset = queryset.filter(domain__icontains=domain)
 
-        if age:
-            age = int(age)
-            queryset = queryset.filter(
-                Q(age_min__isnull=True) | Q(age_min__lte=age),
-            ).filter(
-                Q(age_max__isnull=True) | Q(age_max__gte=age),
-            )
-
+        if age and age != "전체":
+            try:
+                age = int(age)
+            except ValueError:
+                age = None
+            if age is not None:
+                queryset = queryset.filter(
+                    Q(age_min__isnull=True) | Q(age_min__lte=age),
+                ).filter(
+                    Q(age_max__isnull=True) | Q(age_max__gte=age),
+                )
         if income_condition:
             if income_condition in {"제한없음", "제한 없음"}:
                 queryset = queryset.filter(
