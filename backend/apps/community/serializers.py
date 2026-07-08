@@ -27,6 +27,8 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     comment_count = serializers.SerializerMethodField()
     content_preview = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = CommunityPost
@@ -40,6 +42,8 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
             "author_name",
             "view_count",
             "comment_count",
+            "like_count",
+            "is_liked",
             "created_at",
             "updated_at",
         ]
@@ -50,12 +54,25 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
     def get_content_preview(self, obj):
         return obj.content[:100]
 
+    def get_like_count(self, obj):
+        # views.py 쪽 queryset이 prefetch_related("likes")를 걸어두므로
+        # obj.likes.count() 대신 캐시된 리스트 길이를 사용해 쿼리 폭증을 피함
+        return len(obj.likes.all())
+
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return any(like.user_id == request.user.id for like in obj.likes.all())
+
 
 class CommunityPostDetailSerializer(serializers.ModelSerializer):
     author_id = serializers.IntegerField(source="author.id", read_only=True)
     author_name = serializers.CharField(read_only=True)
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    like_count = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = CommunityPost
@@ -69,6 +86,8 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "author_name",
             "view_count",
             "comments",
+            "like_count",
+            "is_liked",
             "created_at",
             "updated_at",
         ]
@@ -79,9 +98,20 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "category_label",
             "view_count",
             "comments",
+            "like_count",
+            "is_liked",
             "created_at",
             "updated_at",
         ]
+
+    def get_like_count(self, obj):
+        return obj.likes.count()
+
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.likes.filter(user=request.user).exists()
 
 
 class CommunityPostWriteSerializer(serializers.ModelSerializer):

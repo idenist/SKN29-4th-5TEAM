@@ -46,6 +46,31 @@ class CommunityPost(models.Model):
         return username.strip() or getattr(self.author, "email", "") or ""
 
 
+class Like(models.Model):
+    post = models.ForeignKey(
+        CommunityPost,
+        on_delete=models.CASCADE,
+        related_name="likes",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="community_likes",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["post", "user"], name="unique_community_post_like"),
+        ]
+        indexes = [
+            models.Index(fields=["post"]),
+        ]
+
+    def __str__(self):
+        return f"Like({self.post_id}, {self.user_id})"
+
+
 class Comment(models.Model):
     post = models.ForeignKey(
         CommunityPost,
