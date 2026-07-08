@@ -4,6 +4,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.notifications.models import Notification
+
 from .models import Comment, CommunityPost, Like
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
@@ -12,6 +14,19 @@ from .serializers import (
     CommunityPostListSerializer,
     CommunityPostWriteSerializer,
 )
+
+
+def create_post_activity_notification(post, actor, title, message):
+    if post.author_id == actor.id:
+        return
+
+    Notification.objects.create(
+        user=post.author,
+        notification_type=Notification.NotificationType.SYSTEM,
+        title=title,
+        message=message,
+        link=f"/community/{post.id}",
+    )
 
 
 class CommunityPostViewSet(viewsets.ModelViewSet):
@@ -72,7 +87,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         ).select_related("author")
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, post_id=self.kwargs["post_id"])
+        comment = serializer.save(author=self.request.user, post_id=self.kwargs["post_id"])
+        create_post_activity_notification(
+            comment.post,
+            self.request.user,
+            "게시글에 새 댓글이 달렸습니다",
+            f"{self.request.user}님이 회원님의 글에 댓글을 남겼습니다.",
+        )
 
 
 class PostLikeToggleView(APIView):
@@ -91,7 +112,13 @@ class PostLikeToggleView(APIView):
             liked = False
         else:
             liked = True
+            create_post_activity_notification(
+                post,
+                request.user,
+                "게시글에 좋아요가 눌렸습니다",
+                f"{request.user}님이 회원님의 글을 좋아합니다.",
+            )
         return Response(
-            {"liked": liked, "like_count": post.likes.count()},
+            {"post_id": post.id, "is_liked": liked, "likes": post.likes.count(), "like_count": post.likes.count()},
             status=status.HTTP_200_OK,
         )

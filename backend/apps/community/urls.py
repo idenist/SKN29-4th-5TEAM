@@ -11,7 +11,6 @@ post_detail = CommunityPostViewSet.as_view(
         "delete": "destroy",
     }
 )
-post_like = CommunityPostViewSet.as_view({"post": "like"})
 comment_list = CommentViewSet.as_view({"get": "list", "post": "create"})
 comment_detail = CommentViewSet.as_view({"delete": "destroy"})
 post_like = PostLikeToggleView.as_view()
@@ -29,10 +28,5 @@ urlpatterns = [
         "posts/<int:post_id>/comments/<int:pk>/",
         comment_detail,
         name="community-comment-detail",
-    ),
-    path(
-        "posts/<int:post_id>/like/",
-        post_like,
-        name="community-post-like",
     ),
 ]

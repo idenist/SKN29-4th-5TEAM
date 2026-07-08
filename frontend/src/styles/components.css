@@ -129,6 +129,16 @@
   padding: 0 var(--space-4);
 }
 
+.ui-input[type='number'] {
+  appearance: auto;
+}
+
+.ui-input[type='number']::-webkit-outer-spin-button,
+.ui-input[type='number']::-webkit-inner-spin-button {
+  margin: 0;
+  opacity: 1;
+}
+
 .ui-input-has-left,
 .ui-search-input {
   padding-left: 2.75rem;

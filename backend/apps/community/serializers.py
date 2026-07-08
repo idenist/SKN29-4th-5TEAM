@@ -71,6 +71,7 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(read_only=True)
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    comment_count = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
 
@@ -85,6 +86,7 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "author_id",
             "author_name",
             "view_count",
+            "comment_count",
             "comments",
             "like_count",
             "is_liked",
@@ -97,12 +99,16 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "author_name",
             "category_label",
             "view_count",
+            "comment_count",
             "comments",
             "like_count",
             "is_liked",
             "created_at",
             "updated_at",
         ]
+
+    def get_comment_count(self, obj):
+        return obj.comments.count()
 
     def get_like_count(self, obj):
         return obj.likes.count()

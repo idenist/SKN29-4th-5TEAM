@@ -101,7 +101,6 @@ export default function ProfileEditForm({
           />
           <RegionSelect value={values.region} onChange={(value) => updateValue('region', value)} />
         </div>
-        <p className="mypage-muted">이름/닉네임은 현재 백엔드 프로필 수정 API에서 지원하지 않습니다.</p>
 
         <fieldset className="profile-interest-field">
           <legend>관심 분야</legend>
@@ -130,12 +129,17 @@ export default function ProfileEditForm({
         {error ? <p className="ui-error" role="alert">{error}</p> : null}
 
         <div className="profile-edit-actions">
-          <Link to="/mypage" className="ui-button ui-button-ghost ui-button-md">
-            취소
+          <Link to="/mypage/password" className="ui-button ui-button-secondary ui-button-md">
+            비밀번호 변경
           </Link>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? '저장 중...' : '저장'}
-          </Button>
+          <div>
+            <Link to="/mypage" className="ui-button ui-button-ghost ui-button-md">
+              취소
+            </Link>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? '저장 중...' : '저장'}
+            </Button>
+          </div>
         </div>
       </form>
     </Card>

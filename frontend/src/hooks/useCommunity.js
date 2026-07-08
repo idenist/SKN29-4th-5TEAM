@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   createComment as createCommentRequest,
   createPost as createPostRequest,
+  deleteComment as deleteCommentRequest,
   deletePost as deletePostRequest,
   getPostDetail,
   getPosts,
@@ -153,10 +154,30 @@ export function useCommunityPost(postId) {
         return {
           ...currentPost,
           comments: nextComments,
-          commentsCount: nextComments.length
+          commentsCount: (currentPost.commentsCount ?? currentPost.comments?.length ?? 0) + 1
         };
       });
       return comment;
+    },
+    [isAuthenticated, postId]
+  );
+
+  const deleteComment = useCallback(
+    async (commentId) => {
+      if (!isAuthenticated) {
+        throw new Error('로그인이 필요한 기능입니다.');
+      }
+
+      await deleteCommentRequest(postId, commentId);
+      setPost((currentPost) => {
+        if (!currentPost) return currentPost;
+        const nextComments = (currentPost.comments || []).filter((comment) => String(comment.id) !== String(commentId));
+        return {
+          ...currentPost,
+          comments: nextComments,
+          commentsCount: Math.max(0, (currentPost.commentsCount ?? currentPost.comments?.length ?? 1) - 1)
+        };
+      });
     },
     [isAuthenticated, postId]
   );
@@ -170,6 +191,7 @@ export function useCommunityPost(postId) {
     updatePost,
     deletePost,
     toggleLike,
-    createComment
+    createComment,
+    deleteComment
   };
 }

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 const ACCESS_TOKEN_KEY = 'accessToken';
+export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -41,8 +42,8 @@ apiClient.interceptors.response.use(
     return payload;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      // TODO: Implement refresh-token retry flow after auth state is connected.
+    if (error.response?.status === 401 && localStorage.getItem(ACCESS_TOKEN_KEY)) {
+      window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT));
     }
 
     const payload = error.response?.data;

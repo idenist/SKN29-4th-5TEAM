@@ -43,6 +43,14 @@ const regionCodeMap = {
   제주: '50000'
 };
 
+const deadlineStatusMap = {
+  예정: 'upcoming',
+  신청가능: 'ongoing',
+  마감임박: 'closing_soon',
+  마감: 'closed',
+  확인필요: 'unknown'
+};
+
 const normalizeSourceCategoryParam = (value) => {
   if (allValues.has(value)) return undefined;
   return sourceCategoryMap[value] || value;
@@ -53,11 +61,23 @@ const normalizeRegionParam = (value) => {
   return regionCodeMap[value] || value;
 };
 
+const normalizeDeadlineStatusParam = (value) => {
+  if (allValues.has(value)) return undefined;
+  return deadlineStatusMap[value] || value;
+};
+
 const toPolicyParams = (params = {}) => ({
   keyword: params.keyword || params.search || undefined,
   region: normalizeRegionParam(params.region),
-  source_category: normalizeSourceCategoryParam(params.sourceCategory || params.source_category || params.category),
-  age: params.age || undefined
+  source_category: normalizeSourceCategoryParam(params.sourceCategory || params.source_category),
+  domain: allValues.has(params.domain || params.category) ? undefined : params.domain || params.category,
+  age: params.age || undefined,
+  income_condition: allValues.has(params.incomeCondition || params.income_condition || params.income)
+    ? undefined
+    : params.incomeCondition || params.income_condition || params.income,
+  deadline_status: normalizeDeadlineStatusParam(params.deadlineStatus || params.deadline_status || params.status),
+  limit: params.limit || undefined,
+  offset: params.offset || undefined
 });
 
 export const getPolicies = async (params = {}) => {

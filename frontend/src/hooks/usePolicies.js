@@ -23,7 +23,20 @@ export function usePolicyList(params = {}) {
   const enabled = params.enabled ?? true;
   const stableParams = useMemo(
     () => params,
-    [params.keyword, params.region, params.sourceCategory, params.category, params.age, params.enabled]
+    [
+      params.keyword,
+      params.region,
+      params.sourceCategory,
+      params.category,
+      params.status,
+      params.income,
+      params.deadlineStatus,
+      params.incomeCondition,
+      params.age,
+      params.limit,
+      params.offset,
+      params.enabled
+    ]
   );
 
   const fetchPolicies = useCallback(async () => {

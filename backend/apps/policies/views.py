@@ -79,7 +79,7 @@ def record_popular_search_keyword(raw_keyword):
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
-    쿼리 파라미터: keyword, region, source_category, age, deadline_status, limit, offset
+    쿼리 파라미터: keyword, region, source_category, domain, age, income_condition, deadline_status, limit, offset
     """
 
     serializer_class = PolicyListSerializer
@@ -94,7 +94,9 @@ class PolicyListView(generics.ListAPIView):
         )
         region = self.request.query_params.get("region")
         source_category = self.request.query_params.get("source_category")
+        domain = self.request.query_params.get("domain")
         age = self.request.query_params.get("age")
+        income_condition = self.request.query_params.get("income_condition")
         deadline_status = self.request.query_params.get("deadline_status")
 
         if keyword:
@@ -106,6 +108,8 @@ class PolicyListView(generics.ListAPIView):
             queryset = queryset.filter(region_codes__contains=[region_code])
         if source_category:
             queryset = queryset.filter(source_category=source_category)
+        if domain:
+            queryset = queryset.filter(domain__icontains=domain)
 
         if age:
             age = int(age)
@@ -114,6 +118,9 @@ class PolicyListView(generics.ListAPIView):
             ).filter(
                 Q(age_max__isnull=True) | Q(age_max__gte=age),
             )
+
+        if income_condition:
+            queryset = queryset.filter(income_condition__icontains=income_condition)
 
         if deadline_status:
             queryset = queryset.filter(deadline_status=deadline_status)

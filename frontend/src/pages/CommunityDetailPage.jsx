@@ -17,10 +17,21 @@ export default function CommunityDetailPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { user: apiUser, isAuthenticated } = useAuth();
-  const { post: apiPost, isLoading, updatePost, deletePost, toggleLike, createComment } = useCommunityPost(postId);
+  const {
+    post: apiPost,
+    isLoading,
+    error,
+    refetch,
+    updatePost,
+    deletePost,
+    toggleLike,
+    createComment,
+    deleteComment
+  } = useCommunityPost(postId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
   const [likeError, setLikeError] = useState('');
@@ -30,16 +41,9 @@ export default function CommunityDetailPage() {
     return apiUser || null;
   }, [apiUser]);
 
-  // 🛡️ UI 무하자 검증을 위한 로컬 방어선 상세 데이터셋 (작성자 ID 분리 배치)
-  const localFallbackPosts = {
-    1: { id: 1, category: 'review', title: '청년내일저축계좌 드디어 승인됐어요!!', content: '조건 까다로울 줄 알았는데 서류 잘 챙겨 내니까 통과됐네요! 궁금한 점 있으시면 언제든 물어보세요.', authorName: '행복한청년', authorId: 'yena123', views: 1204, likes: 87 },
-    2: { id: 2, category: 'question', title: '서울 월세 지원 서류 뭐뭐 준비해야 하나요?', content: '주민등록등본이랑 임대차계약서 말고 확정일자 서류도 필수로 내야 하는지 헷갈립니다. 아시는 분 답변 부탁드려요!', authorName: '서울살이', authorId: 'otherUser', views: 893, likes: 34 }
-  };
-
-  // 백엔드 통신 데이터가 있으면 그것을 우선하고, 없으면 로컬 검증용 매핑 데이터 가동
   const post = useMemo(() => {
-    return apiPost || localFallbackPosts[postId] || localFallbackPosts[1];
-  }, [apiPost, postId]);
+    return apiPost;
+  }, [apiPost]);
 
   const handleUpdate = async (payload) => {
     setIsSubmitting(true);
@@ -105,10 +109,40 @@ export default function CommunityDetailPage() {
     }
   };
 
+  const handleDeleteComment = async (commentId) => {
+    setCommentError('');
+
+    if (!isAuthenticated) {
+      setCommentError('댓글 삭제는 로그인 후 이용할 수 있습니다.');
+      return;
+    }
+
+    setDeletingCommentId(commentId);
+    try {
+      await deleteComment(commentId);
+    } catch (requestError) {
+      setCommentError(getErrorMessage(requestError));
+    } finally {
+      setDeletingCommentId('');
+    }
+  };
+
   if (isLoading && !apiPost) {
     return (
       <div style={{ backgroundColor: 'transparent', minHeight: '100vh', padding: '40px 60px' }}>
         <Spinner label="게시글을 불러오는 중..." />
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div style={{ backgroundColor: 'transparent', minHeight: '100vh', padding: '40px 60px' }}>
+        <ErrorState
+          title="게시글을 찾을 수 없습니다"
+          description={error || '요청한 게시글이 없거나 상세 정보를 불러오지 못했습니다.'}
+          onRetry={refetch}
+        />
       </div>
     );
   }
@@ -151,8 +185,11 @@ export default function CommunityDetailPage() {
         <CommentPanel
           comments={post.comments || []}
           isAuthenticated={isAuthenticated}
+          currentUserId={user?.id}
           onSubmit={handleCreateComment}
+          onDelete={handleDeleteComment}
           isSubmitting={isCommentSubmitting}
+          deletingCommentId={deletingCommentId}
           error={commentError}
         />
       </div>

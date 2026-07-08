@@ -6,7 +6,7 @@ export default function NewsPage() {
   // 🧭 8대 핵심 청년 정책 검색 키워드 탭
   const keywords = ['청년정책', '청년수당', '청년월세지원', '청년도약계좌', '내일배움카드', '취업장려금', '창업지원', '주거지원'];
   
-  const [selectedKeyword, setSelectedKeyword] = useState('청년월세지원'); 
+  const [selectedKeyword, setSelectedKeyword] = useState(''); 
   const [newsList, setNewsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +16,7 @@ export default function NewsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        setNewsList(await getNaverNews(selectedKeyword, 10));
+        setNewsList(await getNaverNews(selectedKeyword || '청년정책', 10));
       } catch (err) {
         setError('뉴스 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         console.error(err);
@@ -29,6 +29,7 @@ export default function NewsPage() {
   }, [selectedKeyword]);
 
   const getSubTags = (keyword) => {
+    if (!keyword) return ['청년정책', '정책', '지원'];
     if (keyword === '청년월세지원') return ['청년월세지원', '주거지원', '지원금'];
     if (keyword === '청년수당') return ['청년수당', '생활안정', '서울시'];
     return [keyword, '정책', '지원'];

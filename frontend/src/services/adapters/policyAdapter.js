@@ -4,6 +4,38 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const firstText = (...values) => values.find((value) => typeof value === 'string' && value.trim())?.trim() || '';
 
+const regionCodeLabels = {
+  11000: '서울',
+  26000: '부산',
+  27000: '대구',
+  28000: '인천',
+  29000: '광주',
+  30000: '대전',
+  31000: '울산',
+  36000: '세종',
+  41000: '경기',
+  42000: '강원',
+  43000: '충북',
+  44000: '충남',
+  45000: '전북',
+  46000: '전남',
+  47000: '경북',
+  48000: '경남',
+  50000: '제주'
+};
+
+const formatRegion = (policy = {}) => {
+  if (policy.location && String(policy.location).trim()) {
+    return String(policy.location).trim();
+  }
+
+  const regions = asArray(policy.region_codes)
+    .map((code) => regionCodeLabels[String(code)] || String(code))
+    .filter(Boolean);
+
+  return regions.join(', ') || EMPTY_TEXT;
+};
+
 const toList = (value) => {
   if (Array.isArray(value)) {
     return value.filter(Boolean).map(String);
@@ -47,7 +79,7 @@ export const adaptPolicyListItem = (policy = {}) => ({
   title: policy.title || EMPTY_TEXT,
   category: policy.domain || mapSourceCategory(policy.source_category),
   sourceCategory: policy.source_category || '',
-  region: asArray(policy.region_codes).join(', ') || policy.location || EMPTY_TEXT,
+  region: formatRegion(policy),
   organization: policy.organization || EMPTY_TEXT,
   status: mapDeadlineStatus(policy.deadline_status),
   deadlineStatus: policy.deadline_status || 'unknown',
@@ -79,7 +111,7 @@ export const adaptPolicyDetail = (policy = {}) => ({
   programPeriod: policy.program_period_text || EMPTY_TEXT,
   age: [policy.age_min, policy.age_max].filter((value) => value !== null && value !== undefined).join('~') || policy.participation_target || EMPTY_TEXT,
   income: policy.income_condition || EMPTY_TEXT,
-  location: policy.location || EMPTY_TEXT,
+  location: formatRegion(policy),
   relatedPolicies: [],
   raw: policy
 });

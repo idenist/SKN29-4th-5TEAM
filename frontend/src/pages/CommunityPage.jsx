@@ -109,6 +109,7 @@ export default function CommunityPage() {
                   <th style={{ padding: '18px 24px', width: '140px', textAlign: 'center' }}>작성자</th>
                   <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>조회</th>
                   <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>좋아요</th>
+                  <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>댓글</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,6 +160,9 @@ export default function CommunityPage() {
                       {/* 좋아요수 안전 처리 */}
                       <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
                         {post.likes !== undefined ? post.likes.toLocaleString() : '0'}
+                      </td>
+                      <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
+                        {post.commentsCount !== undefined ? post.commentsCount.toLocaleString() : '0'}
                       </td>
                     </tr>
                   );

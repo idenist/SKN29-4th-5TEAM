@@ -27,8 +27,8 @@ export const togglePostLike = async (postId) => {
   const payload = await apiClient.post(`/community/posts/${postId}/like/`);
   return {
     postId: String(payload.post_id ?? postId),
-    likes: payload.likes ?? 0,
-    isLiked: Boolean(payload.is_liked)
+    likes: payload.likes ?? payload.like_count ?? 0,
+    isLiked: Boolean(payload.is_liked ?? payload.liked)
   };
 };
 
@@ -37,6 +37,8 @@ export const createComment = async (postId, content) => {
   return adaptCommunityComment(comment);
 };
 
+export const deleteComment = (postId, commentId) => apiClient.delete(`/community/posts/${postId}/comments/${commentId}/`);
+
 export default {
   getPosts,
   createPost,
@@ -44,5 +46,6 @@ export default {
   updatePost,
   deletePost,
   togglePostLike,
-  createComment
+  createComment,
+  deleteComment
 };
