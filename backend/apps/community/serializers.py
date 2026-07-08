@@ -27,11 +27,7 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     comment_count = serializers.SerializerMethodField()
     content_preview = serializers.SerializerMethodField()
-<<<<<<< HEAD
-    likes = serializers.SerializerMethodField()
-=======
     like_count = serializers.SerializerMethodField()
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
@@ -45,8 +41,6 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
             "author_id",
             "author_name",
             "view_count",
-            "likes",
-            "is_liked",
             "comment_count",
             "like_count",
             "is_liked",
@@ -60,17 +54,6 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
     def get_content_preview(self, obj):
         return obj.content[:100]
 
-<<<<<<< HEAD
-    def get_likes(self, obj):
-        return obj.likes.count()
-
-    def get_is_liked(self, obj):
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
-        if not user or not user.is_authenticated:
-            return False
-        return obj.likes.filter(user=user).exists()
-=======
     def get_like_count(self, obj):
         # views.py 쪽 queryset이 prefetch_related("likes")를 걸어두므로
         # obj.likes.count() 대신 캐시된 리스트 길이를 사용해 쿼리 폭증을 피함
@@ -81,7 +64,6 @@ class CommunityPostListSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return False
         return any(like.user_id == request.user.id for like in obj.likes.all())
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
 
 
 class CommunityPostDetailSerializer(serializers.ModelSerializer):
@@ -89,11 +71,7 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(read_only=True)
     category_label = serializers.CharField(source="get_category_display", read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-<<<<<<< HEAD
-    likes = serializers.SerializerMethodField()
-=======
     like_count = serializers.SerializerMethodField()
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
@@ -107,8 +85,6 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "author_id",
             "author_name",
             "view_count",
-            "likes",
-            "is_liked",
             "comments",
             "like_count",
             "is_liked",
@@ -121,8 +97,6 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "author_name",
             "category_label",
             "view_count",
-            "likes",
-            "is_liked",
             "comments",
             "like_count",
             "is_liked",
@@ -130,25 +104,14 @@ class CommunityPostDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-<<<<<<< HEAD
-    def get_likes(self, obj):
-=======
     def get_like_count(self, obj):
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
         return obj.likes.count()
 
     def get_is_liked(self, obj):
         request = self.context.get("request")
-<<<<<<< HEAD
-        user = getattr(request, "user", None)
-        if not user or not user.is_authenticated:
-            return False
-        return obj.likes.filter(user=user).exists()
-=======
         if not request or not request.user.is_authenticated:
             return False
         return obj.likes.filter(user=request.user).exists()
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
 
 
 class CommunityPostWriteSerializer(serializers.ModelSerializer):

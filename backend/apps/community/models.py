@@ -100,34 +100,3 @@ class Comment(models.Model):
         username = getattr(self.author, "username", "") or ""
 
         return username.strip() or getattr(self.author, "email", "") or ""
-
-<<<<<<< HEAD
-
-class CommunityPostLike(models.Model):
-    post = models.ForeignKey(
-        CommunityPost,
-        on_delete=models.CASCADE,
-        related_name="likes",
-    )
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="community_post_likes",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["post", "user"],
-                name="unique_community_post_like",
-            )
-        ]
-        indexes = [
-            models.Index(fields=["post", "created_at"]),
-        ]
-
-    def __str__(self):
-        return f"Like({self.post_id}, {self.user_id})"
-=======
->>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
