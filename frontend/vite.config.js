@@ -4,11 +4,15 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: 'localhost',
-    port: 3000
-  },
-  preview: {
-    host: 'localhost',
-    port: 3000
+    proxy: {
+      '/v1': {
+        target: 'https://openapi.naver.com',
+        changeOrigin: true,
+        headers: {
+          'X-Naver-Client-Id': '26SNbpvVlhJkhx694SgM',       
+          'X-Naver-Client-Secret': 'Desn_4eKcC' 
+        }
+      }
+    }
   }
 });
