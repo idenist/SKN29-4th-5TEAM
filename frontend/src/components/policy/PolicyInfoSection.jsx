@@ -1,3 +1,5 @@
+import { ExternalLink } from 'lucide-react';
+import Button from '../common/Button.jsx';
 import Card from '../common/Card.jsx';
 
 export default function PolicyInfoSection({ policy }) {
@@ -21,6 +23,25 @@ export default function PolicyInfoSection({ policy }) {
           </div>
         ))}
       </dl>
+      <div className="policy-detail-contact-action">
+        <div>
+          <span>문의처</span>
+          <strong>{policy.contact}</strong>
+        </div>
+        {policy.applyUrl ? (
+          <a
+            href={policy.applyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="ui-button ui-button-primary ui-button-md"
+          >
+            <span>신청하러 가기</span>
+            <ExternalLink size={16} aria-hidden="true" />
+          </a>
+        ) : (
+          <Button disabled>신청 링크 준비 중</Button>
+        )}
+      </div>
       <div className="policy-detail-tags" aria-label="관련 태그">
         {policy.tags.map((tag) => (
           <span key={tag}>#{tag}</span>
