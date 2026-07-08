@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, ExternalLink } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import Badge from '../common/Badge.jsx';
 import Card from '../common/Card.jsx';
 import PolicyStatusBadge from './PolicyStatusBadge.jsx';
@@ -13,14 +13,7 @@ export default function PolicyCard({ policy, index = 0 }) {
     search: location.search
   };
   const applyUrl = compactText(policy.applyUrl, policy.raw?.application_url);
-  const sourceUrl = compactText(policy.sourceUrl, policy.sourceUrl2, policy.raw?.source_url, policy.raw?.source_url_2, applyUrl);
-  const metaText = [
-    policy.organization,
-    policy.region,
-    policy.period,
-    policy.income
-  ].filter((value) => value && value !== '정보 없음').join(' / ');
-  const summaryText = compactText(policy.description, policy.support, metaText, '상세 내용을 확인해 주세요.');
+  const supportText = compactText(policy.support, policy.description, '상세 내용을 확인해 주세요.');
 
   return (
     <Card className="policy-card policy-card-list-item">
@@ -32,7 +25,6 @@ export default function PolicyCard({ policy, index = 0 }) {
         <div className="policy-card-icon-box">
           <BookOpen size={34} aria-hidden="true" />
         </div>
-        <Badge>{policy.category}</Badge>
       </Link>
 
       <Link to={detailPath} className="policy-card-content-link">
@@ -43,8 +35,6 @@ export default function PolicyCard({ policy, index = 0 }) {
             <Badge>{policy.category}</Badge>
           </div>
         </div>
-
-        <p className="policy-card-summary">{summaryText}</p>
 
         <dl className="policy-card-compact-info">
           <div>
@@ -57,7 +47,7 @@ export default function PolicyCard({ policy, index = 0 }) {
           </div>
           <div>
             <dt>지원내용</dt>
-            <dd>{policy.support}</dd>
+            <dd>{supportText}</dd>
           </div>
         </dl>
       </Link>
@@ -65,21 +55,12 @@ export default function PolicyCard({ policy, index = 0 }) {
       <div className="policy-card-actions">
         {applyUrl ? (
           <a className="policy-card-apply-button" href={applyUrl} target="_blank" rel="noreferrer">
-            신청 가능
+            신청 하기
           </a>
         ) : (
           <span className="policy-card-apply-button policy-card-apply-button-disabled">
             신청 링크 없음
           </span>
-        )}
-        {sourceUrl ? (
-          <a className="policy-card-source-button" href={sourceUrl} target="_blank" rel="noreferrer">
-            출처 보기 <ExternalLink size={14} aria-hidden="true" />
-          </a>
-        ) : (
-          <Link className="policy-card-source-button" to={detailPath}>
-            상세 보기
-          </Link>
         )}
       </div>
     </Card>

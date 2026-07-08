@@ -17,7 +17,7 @@ const initialFilters = {
   age: '',
   category: '전체',
   region: '전체',
-  status: '전체',
+  excludeClosed: true,
   income: '전체'
 };
 
@@ -26,7 +26,7 @@ function getFiltersFromSearchParams(searchParams) {
     age: searchParams.get('age') || initialFilters.age,
     category: searchParams.get('category') || initialFilters.category,
     region: searchParams.get('region') || initialFilters.region,
-    status: searchParams.get('status') || initialFilters.status,
+    excludeClosed: searchParams.get('includeClosed') !== '1',
     income: searchParams.get('income') || initialFilters.income
   };
 }
@@ -44,7 +44,7 @@ function buildPolicySearchParams(keyword, filters, page = 1) {
   if (filters.age) nextParams.set('age', filters.age);
   if (filters.category !== initialFilters.category) nextParams.set('category', filters.category);
   if (filters.region !== initialFilters.region) nextParams.set('region', filters.region);
-  if (filters.status !== initialFilters.status) nextParams.set('status', filters.status);
+  if (filters.excludeClosed === false) nextParams.set('includeClosed', '1');
   if (filters.income !== initialFilters.income) nextParams.set('income', filters.income);
   if (page > 1) nextParams.set('page', String(page));
 
@@ -56,7 +56,7 @@ function isDefaultFilters(filters) {
     !filters.age &&
     filters.category === initialFilters.category &&
     filters.region === initialFilters.region &&
-    filters.status === initialFilters.status &&
+    filters.excludeClosed === initialFilters.excludeClosed &&
     filters.income === initialFilters.income
   );
 }
@@ -79,7 +79,7 @@ export default function PolicySearchPage() {
       age: filters.age,
       region: filters.region,
       category: filters.category,
-      status: filters.status,
+      excludeClosed: filters.excludeClosed,
       income: filters.income,
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
@@ -90,7 +90,7 @@ export default function PolicySearchPage() {
     filters.age,
     filters.category,
     filters.region,
-    filters.status,
+    filters.excludeClosed,
     filters.income,
     page,
     hasSearchCondition
@@ -124,6 +124,17 @@ export default function PolicySearchPage() {
   };
 
   const handleFilterChange = (nextFilters) => {
+    setFilters(nextFilters);
+    setSearchParams(buildPolicySearchParams(submittedKeyword, nextFilters));
+    setPage(1);
+  };
+
+  const handleExcludeClosedChange = (event) => {
+    const nextFilters = {
+      ...filters,
+      excludeClosed: event.target.checked
+    };
+
     setFilters(nextFilters);
     setSearchParams(buildPolicySearchParams(submittedKeyword, nextFilters));
     setPage(1);
@@ -177,15 +188,14 @@ export default function PolicySearchPage() {
               )}
             </div>
 
-            {hasSearchCondition ? (
-              submittedKeyword ? (
-                <p>검색어: {submittedKeyword}</p>
-              ) : (
-                <p>선택한 필터 조건으로 검색 중입니다.</p>
-              )
-            ) : (
-              <p>아직 검색 조건이 없습니다.</p>
-            )}
+            <label className="policy-exclude-closed-toggle">
+              <input
+                type="checkbox"
+                checked={filters.excludeClosed}
+                onChange={handleExcludeClosedChange}
+              />
+              <span>마감된 공고 제외</span>
+            </label>
           </Toolbar>
 
           {!hasSearchCondition ? (

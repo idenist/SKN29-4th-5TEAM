@@ -99,14 +99,19 @@ def record_popular_search_keyword(raw_keyword):
 class PolicyListView(generics.ListAPIView):
     """
     GET /api/policies/
-    쿼리 파라미터: keyword, region, category, source_category, domain, age, income_condition, deadline_status, limit, offset
+    쿼리 파라미터: keyword, region, category, source_category, domain, age, income_condition, deadline_status, include_closed, limit, offset
     """
 
     serializer_class = PolicyListSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        queryset = Policy.objects.all().order_by("-info_score", "item_id")
+        queryset = Policy.objects.all().order_by(
+            F("application_start_date").desc(nulls_last=True),
+            F("application_end_date").desc(nulls_last=True),
+            F("updated_at").desc(nulls_last=True),
+            "item_id",
+        )
         keyword = (
             self.request.query_params.get("keyword")
             or self.request.query_params.get("search")
@@ -119,6 +124,7 @@ class PolicyListView(generics.ListAPIView):
         age = self.request.query_params.get("age")
         income_condition = self.request.query_params.get("income_condition")
         deadline_status = self.request.query_params.get("deadline_status")
+        include_closed = self.request.query_params.get("include_closed") in {"1", "true", "True", "yes", "Y"}
 
         if keyword:
             queryset = queryset.filter(
@@ -169,6 +175,8 @@ class PolicyListView(generics.ListAPIView):
 
         if deadline_status:
             queryset = queryset.filter(deadline_status=deadline_status)
+        elif not include_closed:
+            queryset = queryset.exclude(deadline_status="closed")
 
         normalized_keyword = normalize_popular_search_keyword(keyword)
 

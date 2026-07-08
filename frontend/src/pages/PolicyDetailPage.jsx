@@ -1,7 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
-import Button from '../components/common/Button.jsx';
-import Card from '../components/common/Card.jsx';
+import { ArrowLeft } from 'lucide-react';
 import ErrorState from '../components/common/ErrorState.jsx';
 import Spinner from '../components/common/Spinner.jsx';
 import PolicyApplySection from '../components/policy/PolicyApplySection.jsx';
@@ -79,41 +77,6 @@ export default function PolicyDetailPage() {
           <PolicyApplySection policy={policy} />
           <RelatedPolicyList policies={policy.relatedPolicies} />
         </main>
-
-        <aside className="policy-detail-side" aria-label="정책 요약">
-          <Card className="policy-summary-card">
-            <h2>신청 요약</h2>
-            <dl>
-              <div>
-                <dt>지원 내용</dt>
-                <dd>{policy.support}</dd>
-              </div>
-              <div>
-                <dt>신청 기간</dt>
-                <dd>{policy.period}</dd>
-              </div>
-              <div>
-                <dt>문의처</dt>
-                <dd>{policy.contact}</dd>
-              </div>
-            </dl>
-            {policy.applyUrl ? (
-              <a
-                href={policy.applyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="ui-button ui-button-primary ui-button-md ui-button-full"
-              >
-                <span>신청하러 가기</span>
-                <ExternalLink size={16} aria-hidden="true" />
-              </a>
-            ) : (
-              <Button disabled fullWidth>
-                신청 링크 준비 중
-              </Button>
-            )}
-          </Card>
-        </aside>
       </div>
     </div>
   );

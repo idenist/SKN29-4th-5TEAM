@@ -5,7 +5,6 @@ import Select from '../common/Select.jsx';
 const filterOptions = {
   category: ['전체', '주거', '금융', '취업', '교육', '창업'],
   region: ['전체', '서울', '경기', '인천', '부산', '대구', '광주', '대전'],
-  status: ['전체', '신청가능', '마감임박', '마감'],
   income: ['전체', '제한없음', '중위소득', '저소득']
 };
 
@@ -33,7 +32,7 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
       age: '',
       category: '전체',
       region: '전체',
-      status: '전체',
+      excludeClosed: true,
       income: '전체'
     });
     onReset?.();
@@ -82,14 +81,6 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
           options={toSelectOptions(filterOptions.region)}
           placeholder=""
           onChange={(event) => updateDraft('region', event.target.value)}
-          className="policy-condition-select"
-        />
-        <Select
-          label="상태"
-          value={draftFilters.status}
-          options={toSelectOptions(filterOptions.status)}
-          placeholder=""
-          onChange={(event) => updateDraft('status', event.target.value)}
           className="policy-condition-select"
         />
         <Select

@@ -6,6 +6,52 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 
 const firstText = (...values) => values.find((value) => typeof value === 'string' && value.trim())?.trim() || '';
 
+const toValidAge = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+
+  const age = Number(value);
+  return Number.isFinite(age) && age >= 0 && age <= 120 ? age : null;
+};
+
+const formatAge = (policy = {}) => {
+  const minAge = toValidAge(policy.age_min);
+  const maxAge = toValidAge(policy.age_max);
+
+  if (minAge !== null && maxAge !== null) {
+    return minAge === maxAge ? `${minAge}세` : `${minAge}세 ~ ${maxAge}세`;
+  }
+
+  if (minAge !== null) return `${minAge}세 이상`;
+  if (maxAge !== null) return `${maxAge}세 이하`;
+
+  const targetText = String(policy.participation_target || '').trim();
+  if (!targetText) return EMPTY_TEXT;
+  if (/연령\s*제한\s*없음|나이\s*제한\s*없음/.test(targetText)) return '연령 제한 없음';
+
+  const numericRangeMatch = targetText.match(/^(\d{1,3})\s*(?:~|-)\s*(\d{1,3})$/);
+  if (numericRangeMatch) {
+    return `${numericRangeMatch[1]}세 ~ ${numericRangeMatch[2]}세`;
+  }
+
+  const numericAgeMatch = targetText.match(/^\d{1,3}$/);
+  if (numericAgeMatch) {
+    return `${targetText}세`;
+  }
+
+  const ageRangeMatch = targetText.match(/(?:만\s*)?\d{1,3}\s*세\s*(?:~|-|부터|이상)\s*(?:만\s*)?\d{1,3}\s*세?/);
+  if (ageRangeMatch) {
+    return ageRangeMatch[0].replace(/\s+/g, ' ').trim();
+  }
+
+  const singleAgeMatch = targetText.match(/(?:만\s*)?\d{1,3}\s*세/);
+  if (singleAgeMatch) {
+    const age = singleAgeMatch[0].replace(/\s+/g, ' ').trim();
+    return age.startsWith('만') ? age : `만 ${age}`;
+  }
+
+  return EMPTY_TEXT;
+};
+
 const regionCodeLabels = {
   11000: '서울',
   26000: '부산',
@@ -225,7 +271,7 @@ export const adaptPolicyListItem = (policy = {}) => ({
   deadlineStatus: policy.deadline_status || 'unknown',
   deadline: formatDate(policy.application_end_date),
   period: formatDateText(policy.application_period_text || (policy.application_end_date ? `~ ${policy.application_end_date}` : EMPTY_TEXT)),
-  age: policy.participation_target || EMPTY_TEXT,
+  age: formatAge(policy),
   income: policy.income_condition || EMPTY_TEXT,
   support: firstText(policy.benefit_text, policy.policy_summary, policy.participation_target, EMPTY_TEXT),
   description: firstText(policy.policy_summary, policy.participation_target, EMPTY_TEXT),
@@ -252,7 +298,7 @@ export const adaptPolicyDetail = (policy = {}) => ({
   sourceUrl2: policy.source_url_2 || '',
   period: formatDateText(policy.application_period_text || EMPTY_TEXT),
   programPeriod: formatDateText(policy.program_period_text || EMPTY_TEXT),
-  age: [policy.age_min, policy.age_max].filter((value) => value !== null && value !== undefined).join('~') || policy.participation_target || EMPTY_TEXT,
+  age: formatAge(policy),
   income: policy.income_condition || EMPTY_TEXT,
   location: formatRegion(policy),
   relatedPolicies: [],
