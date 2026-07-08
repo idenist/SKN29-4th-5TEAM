@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import Button from '../components/common/Button.jsx';
 import Card from '../components/common/Card.jsx';
@@ -13,6 +13,11 @@ import { usePolicyDetail } from '../hooks/usePolicies.js';
 
 export default function PolicyDetailPage() {
   const { itemId } = useParams();
+  const location = useLocation();
+  const listPath = {
+    pathname: '/policies',
+    search: location.search
+  };
   const {
     policy,
     isLoading,
@@ -27,7 +32,7 @@ export default function PolicyDetailPage() {
   if (isLoading) {
     return (
       <div className="policy-detail-page">
-        <Link to="/policies" className="ui-button ui-button-ghost ui-button-sm policy-back-link">
+        <Link to={listPath} className="ui-button ui-button-ghost ui-button-sm policy-back-link">
           <ArrowLeft size={16} aria-hidden="true" />
           정책 목록으로
         </Link>
@@ -39,7 +44,7 @@ export default function PolicyDetailPage() {
   if (error || !policy) {
     return (
       <div className="policy-detail-page">
-        <Link to="/policies" className="ui-button ui-button-ghost ui-button-sm policy-back-link">
+        <Link to={listPath} className="ui-button ui-button-ghost ui-button-sm policy-back-link">
           <ArrowLeft size={16} aria-hidden="true" />
           정책 목록으로
         </Link>
@@ -54,7 +59,7 @@ export default function PolicyDetailPage() {
 
   return (
     <div className="policy-detail-page">
-      <Link to="/policies" className="ui-button ui-button-ghost ui-button-sm policy-back-link">
+      <Link to={listPath} className="ui-button ui-button-ghost ui-button-sm policy-back-link">
         <ArrowLeft size={16} aria-hidden="true" />
         정책 목록으로
       </Link>

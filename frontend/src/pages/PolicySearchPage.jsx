@@ -21,6 +21,36 @@ const initialFilters = {
   income: '전체'
 };
 
+function getFiltersFromSearchParams(searchParams) {
+  return {
+    age: searchParams.get('age') || initialFilters.age,
+    category: searchParams.get('category') || initialFilters.category,
+    region: searchParams.get('region') || initialFilters.region,
+    status: searchParams.get('status') || initialFilters.status,
+    income: searchParams.get('income') || initialFilters.income
+  };
+}
+
+function getPageFromSearchParams(searchParams) {
+  const pageParam = Number(searchParams.get('page'));
+  return Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+}
+
+function buildPolicySearchParams(keyword, filters, page = 1) {
+  const nextParams = new URLSearchParams();
+  const nextKeyword = keyword.trim();
+
+  if (nextKeyword) nextParams.set('keyword', nextKeyword);
+  if (filters.age) nextParams.set('age', filters.age);
+  if (filters.category !== initialFilters.category) nextParams.set('category', filters.category);
+  if (filters.region !== initialFilters.region) nextParams.set('region', filters.region);
+  if (filters.status !== initialFilters.status) nextParams.set('status', filters.status);
+  if (filters.income !== initialFilters.income) nextParams.set('income', filters.income);
+  if (page > 1) nextParams.set('page', String(page));
+
+  return nextParams;
+}
+
 function isDefaultFilters(filters) {
   return (
     !filters.age &&
@@ -44,8 +74,8 @@ export default function PolicySearchPage() {
   const keywordParam = searchParams.get('keyword') || '';
   const [keyword, setKeyword] = useState(keywordParam);
   const [submittedKeyword, setSubmittedKeyword] = useState(keywordParam);
-  const [filters, setFilters] = useState(initialFilters);
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState(() => getFiltersFromSearchParams(searchParams));
+  const [page, setPage] = useState(() => getPageFromSearchParams(searchParams));
   const hasSearchCondition = Boolean(submittedKeyword.trim()) || !isDefaultFilters(filters);
 
   const queryParams = useMemo(
@@ -79,18 +109,20 @@ export default function PolicySearchPage() {
   useEffect(() => {
     setKeyword(keywordParam);
     setSubmittedKeyword(keywordParam);
-    setPage(1);
-  }, [keywordParam]);
+    setFilters(getFiltersFromSearchParams(searchParams));
+    setPage(getPageFromSearchParams(searchParams));
+  }, [keywordParam, searchParams]);
 
   const handleSearch = () => {
     const nextKeyword = keyword.trim();
     setSubmittedKeyword(nextKeyword);
-    setSearchParams(nextKeyword ? { keyword: nextKeyword } : {});
+    setSearchParams(buildPolicySearchParams(nextKeyword, filters));
     setPage(1);
   };
 
   const handleFilterChange = (nextFilters) => {
     setFilters(nextFilters);
+    setSearchParams(buildPolicySearchParams(submittedKeyword, nextFilters));
     setPage(1);
   };
 
@@ -100,6 +132,11 @@ export default function PolicySearchPage() {
     setSearchParams({});
     setFilters(initialFilters);
     setPage(1);
+  };
+
+  const handlePageChange = (nextPage) => {
+    setPage(nextPage);
+    setSearchParams(buildPolicySearchParams(submittedKeyword, filters, nextPage));
   };
 
   return (
@@ -155,7 +192,7 @@ export default function PolicySearchPage() {
           ) : filteredPolicies.length > 0 ? (
             <>
               <PolicyList policies={pagedPolicies} />
-              <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
+              <Pagination page={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
             </>
           ) : (
             <EmptyState

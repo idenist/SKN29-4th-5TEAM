@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Spinner from '../components/common/Spinner.jsx';
+import { getNaverNews } from '../services/newsApi.js';
 
 export default function NewsPage() {
   // 🧭 8대 핵심 청년 정책 검색 키워드 탭
@@ -10,49 +11,12 @@ export default function NewsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🧼 HTML 태그 및 특수문자 정제 함수
-  const cleanText = (text) => {
-    if (!text) return '';
-    return text
-      .replace(/<\/?[^>]+(>|$)/g, "")
-      .replace(/&quot;/g, '"')         
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&");
-  };
-
   useEffect(() => {
     const fetchNaverNews = async () => {
       try {
         setIsLoading(true);
         setError(null);
-
-        const response = await fetch(
-          `/v1/search/news.json?query=${encodeURIComponent(selectedKeyword)}&display=10&sort=date`
-        );
-        
-        if (!response.ok) {
-          throw new Error('API_RESPONSE_FAIL');
-        }
-
-        const data = await response.json();
-
-        if (!data.items || data.items.length === 0) {
-          setNewsList([]);
-          return;
-        }
-
-        const formattedNews = data.items.map((item, index) => ({
-          id: index + 1,
-          title: cleanText(item.title),
-          summary: cleanText(item.description),
-          source: '네이버 뉴스',
-          publishedAt: new Date(item.pubDate).toLocaleDateString('ko-KR').replace(/\.$/, ''), 
-          category: 'news',
-          url: item.link
-        }));
-
-        setNewsList(formattedNews);
+        setNewsList(await getNaverNews(selectedKeyword, 10));
       } catch (err) {
         setError('뉴스 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         console.error(err);

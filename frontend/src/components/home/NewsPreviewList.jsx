@@ -14,17 +14,33 @@ export default function NewsPreviewList({ news = [] }) {
       }
     >
       <div className="home-news-list">
-        {news.map((item) => (
-          <Link key={item.id} to="/news" className="ui-card ui-card-interactive home-news-card">
+        {news.length > 0 ? (
+          news.map((item) => {
+            const CardTag = item.url ? 'a' : Link;
+            const linkProps = item.url
+              ? { href: item.url, target: '_blank', rel: 'noreferrer' }
+              : { to: '/news' };
+
+            return (
+              <CardTag key={item.id} {...linkProps} className="ui-card ui-card-interactive home-news-card">
+                <div>
+                  <p className="home-news-source">
+                    {item.source} · {item.date || item.publishedAt}
+                  </p>
+                  <h3>{item.title}</h3>
+                </div>
+                <ArrowRight size={18} aria-hidden="true" />
+              </CardTag>
+            );
+          })
+        ) : (
+          <div className="ui-card home-news-card">
             <div>
-              <p className="home-news-source">
-                {item.source} · {item.date}
-              </p>
-              <h3>{item.title}</h3>
+              <p className="home-news-source">뉴스</p>
+              <h3>정책 뉴스를 불러오는 중입니다.</h3>
             </div>
-            <ArrowRight size={18} aria-hidden="true" />
-          </Link>
-        ))}
+          </div>
+        )}
       </div>
     </Section>
   );

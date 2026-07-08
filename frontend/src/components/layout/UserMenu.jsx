@@ -196,7 +196,7 @@ export default function UserMenu() {
             로그아웃
           </button>
           <span className="layout-version-badge" aria-label="현재 버전">
-            ver 2.3
+            ver 2.5
           </span>
         </>
       ) : (
@@ -205,7 +205,7 @@ export default function UserMenu() {
             로그인
           </NavLink>
           <span className="layout-version-badge" aria-label="현재 버전">
-            ver 2.3
+            ver 2.5
           </span>
         </>
       )}

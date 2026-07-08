@@ -221,16 +221,13 @@
 
 .policy-card-top,
 .policy-card-badges,
-.policy-card-info,
-.policy-card-support,
 .policy-card-tags {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.policy-card-top,
-.policy-card-support {
+.policy-card-top {
   justify-content: space-between;
 }
 
@@ -262,17 +259,22 @@
 }
 
 .policy-card-info {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
   margin: 0;
 }
 
 .policy-card-info div {
   display: grid;
   gap: var(--space-1);
-  min-width: 132px;
   padding: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--color-surface-muted);
+}
+
+.policy-card-info .policy-card-info-wide {
+  grid-column: span 2;
 }
 
 .policy-card-info dt {
@@ -287,10 +289,8 @@
 .policy-card-info dd {
   margin: 0;
   font-weight: 800;
-}
-
-.policy-card-support strong {
-  color: var(--color-primary);
+  line-height: 1.45;
+  word-break: keep-all;
 }
 
 .policy-card-tags span {
@@ -531,7 +531,6 @@
   }
 
   .policy-card-top,
-  .policy-card-support,
   .policy-result-toolbar,
   .policy-result-toolbar div,
   .policy-detail-header,
@@ -547,6 +546,10 @@
   .policy-card-info {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .policy-card-info .policy-card-info-wide {
+    grid-column: auto;
   }
 
   .policy-detail-header {

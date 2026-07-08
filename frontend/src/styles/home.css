@@ -526,6 +526,17 @@
   gap: 24px;
 }
 
+.home-policy-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-policy-link:focus-visible {
+  outline: 3px solid rgb(59 130 246 / 0.35);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
 .home-policy-card {
   display: grid;
   align-content: start;
