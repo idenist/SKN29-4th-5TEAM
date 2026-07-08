@@ -17,6 +17,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "message",
             "policy",
             "policy_title",
+            "link",
             "is_read",
             "created_at",
         ]

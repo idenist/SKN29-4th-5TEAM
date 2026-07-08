@@ -9,6 +9,7 @@ from rest_framework import generics, permissions, status
 
 from apps.common.responses import success_response, error_response
 
+from .constants import resolve_region_code
 from .models import Policy, Scrap, SearchHistory, ViewedPolicy, PopularSearchKeyword
 from .serializers import (
     PolicyListSerializer,
@@ -101,7 +102,8 @@ class PolicyListView(generics.ListAPIView):
                 Q(title__icontains=keyword) | Q(policy_summary__icontains=keyword)
             )
         if region:
-            queryset = queryset.filter(region_codes__contains=[region])
+            region_code = resolve_region_code(region)
+            queryset = queryset.filter(region_codes__contains=[region_code])
         if source_category:
             queryset = queryset.filter(source_category=source_category)
 

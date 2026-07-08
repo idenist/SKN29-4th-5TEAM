@@ -1,10 +1,16 @@
-from rest_framework import permissions, viewsets
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+<<<<<<< HEAD
 from apps.common.responses import success_response
 
 from .models import Comment, CommunityPost, CommunityPostLike
+=======
+from .models import Comment, CommunityPost, Like
+>>>>>>> b4f93ebf32fd990d6a022040c0fc907fa48d5a90
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     CommentSerializer,
@@ -16,7 +22,7 @@ from .serializers import (
 
 class CommunityPostViewSet(viewsets.ModelViewSet):
     queryset = CommunityPost.objects.select_related("author").prefetch_related(
-        "comments__author"
+        "comments__author", "likes"
     )
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     lookup_url_kwarg = "post_id"
@@ -102,3 +108,25 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, post_id=self.kwargs["post_id"])
+
+
+class PostLikeToggleView(APIView):
+    """
+    POST /api/community/posts/{post_id}/like/
+    로그인 사용자가 이미 좋아요를 눌렀으면 취소, 아니면 좋아요 추가 (토글).
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(CommunityPost, pk=post_id)
+        like, created = Like.objects.get_or_create(post=post, user=request.user)
+        if not created:
+            like.delete()
+            liked = False
+        else:
+            liked = True
+        return Response(
+            {"liked": liked, "like_count": post.likes.count()},
+            status=status.HTTP_200_OK,
+        )
