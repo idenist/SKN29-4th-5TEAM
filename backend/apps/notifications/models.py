@@ -38,6 +38,10 @@ class Notification(models.Model):
     )
     title = models.CharField(max_length=200)
     message = models.TextField()
+    link = models.CharField(
+        max_length=300, blank=True, default="",
+        help_text="프론트에서 알림 클릭 시 이동할 경로 (예: /policies/{item_id})",
+    )
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
