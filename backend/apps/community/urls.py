@@ -16,7 +16,7 @@ comment_detail = CommentViewSet.as_view({"delete": "destroy"})
 
 urlpatterns = [
     path("posts/", post_list, name="community-post-list"),
-    path("posts/<int:pk>/", post_detail, name="community-post-detail"),
+    path("posts/<int:post_id>/", post_detail, name="community-post-detail"),
     path(
         "posts/<int:post_id>/comments/",
         comment_list,

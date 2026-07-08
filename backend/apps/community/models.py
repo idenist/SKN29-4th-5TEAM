@@ -73,4 +73,6 @@ class Comment(models.Model):
     @property
     def author_name(self):
         username = getattr(self.author, "username", "") or ""
+
         return username.strip() or getattr(self.author, "email", "") or ""
+

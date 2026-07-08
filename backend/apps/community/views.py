@@ -17,6 +17,7 @@ class CommunityPostViewSet(viewsets.ModelViewSet):
         "comments__author"
     )
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    lookup_url_kwarg = "post_id"
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -44,8 +45,11 @@ class CommunityPostViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.view_count += 1
-        instance.save(update_fields=["view_count"])
+        session_key = f"community_post_viewed:{instance.pk}"
+        if not request.session.get(session_key):
+            instance.view_count += 1
+            instance.save(update_fields=["view_count"])
+            request.session[session_key] = True
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

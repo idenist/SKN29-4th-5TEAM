@@ -103,4 +103,5 @@ class CommunityPostWriteSerializer(serializers.ModelSerializer):
         valid_values = [choice for choice, _ in CommunityPost.Category.choices]
         if value not in valid_values:
             raise serializers.ValidationError(f"category는 {valid_values} 중 하나여야 합니다.")
+
         return value
