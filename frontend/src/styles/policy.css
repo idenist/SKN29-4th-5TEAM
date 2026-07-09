@@ -560,6 +560,12 @@
   font-weight: 900;
 }
 
+.policy-detail-contact-action .ui-button-primary,
+.policy-detail-contact-action .ui-button-primary span,
+.policy-detail-contact-action .ui-button-primary svg {
+  color: #fff;
+}
+
 .policy-detail-contact-action strong {
   color: var(--color-text);
   font-weight: 900;
