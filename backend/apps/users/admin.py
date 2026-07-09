@@ -15,6 +15,7 @@ class UserProfileInline(admin.StackedInline):
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ("id", "email", "username", "is_staff", "is_active", "date_joined")
+    list_display_links = ("id", "email")  # 이 줄 추가
     list_filter = ("is_staff", "is_active", "date_joined")
     search_fields = ("email", "username")
     ordering = ("-date_joined",)
@@ -57,3 +58,5 @@ class EmailVerificationCodeAdmin(admin.ModelAdmin):
     search_fields = ("email", "code")
     readonly_fields = ("created_at", "verified_at")
     ordering = ("-created_at",)
+
+    
