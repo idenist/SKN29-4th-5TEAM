@@ -97,44 +97,44 @@
 ## 🗂️ 프로젝트 구조
 
 ```text
-SKN29-4th-5TEAM/
-├── backend/
-│   ├── apps/
-│   │   ├── chat_rag/          # /api/ai/chat/ AI 챗봇 API
-│   │   ├── common/            # 공통 인증/예외 처리
-│   │   ├── community/         # 커뮤니티 게시글·댓글·좋아요
-│   │   ├── mypage/            # 마이페이지/스크랩/최근 기록
-│   │   ├── news/              # Naver News API 프록시
-│   │   ├── notifications/     # 알림 API
-│   │   ├── policies/          # 정책 목록/상세/검색 API
-│   │   ├── uploads/           # S3 프로필 이미지 업로드
-│   │   └── users/             # 회원가입/로그인/JWT/이메일 인증
-│   ├── config/                # Django settings / urls / wsgi / asgi
-│   ├── data_pipeline/         # 정책 데이터 적재·전처리 관련 코드
-│   ├── rag_engine/
-│   │   ├── db/                # Vector/Graph DB 연결
-│   │   ├── graph/             # LangGraph workflow
-│   │   ├── prompts/           # LLM 프롬프트
-│   │   ├── retriever/         # Hybrid Retriever
-│   │   └── services/          # 조건 추출, 외부 검색, 답변 생성
-│   └── tests/                 # 백엔드 및 AI/RAG 테스트
-├── frontend/
-│   ├── public/
-│   └── src/
-│       ├── app/               # React Router
-│       ├── components/        # 공통/도메인 컴포넌트
-│       ├── hooks/             # 커스텀 훅
-│       ├── layouts/           # Root/Auth Layout
-│       ├── pages/             # 화면 단위 페이지
-│       ├── services/          # API client 및 adapter
-│       ├── styles/            # 디자인 토큰/반응형 CSS
-│       └── utils/             # 날짜/텍스트 포맷 유틸
-├── deployment/                # dev/prod Docker Compose 및 Dockerfile
-├── documents/                 # 평가 산출물 및 구현 문서
-├── nginx/                     # Nginx reverse proxy 설정
-├── scripts/                   # 보조 스크립트
-├── docker-compose.yml         # 로컬/통합 테스트용 compose
-└── requirements.txt           # RAG/데이터 분석용 루트 의존성
+📦 SKN29-4th-5TEAM/
+├── 🧠 backend/
+│   ├── 🧩 apps/
+│   │   ├── 🤖 chat_rag/          # /api/ai/chat/ AI 챗봇 API
+│   │   ├── 🛠️ common/            # 공통 인증/예외 처리
+│   │   ├── 💬 community/         # 커뮤니티 게시글·댓글·좋아요
+│   │   ├── 🙋 mypage/            # 마이페이지/스크랩/최근 기록
+│   │   ├── 📰 news/              # Naver News API 프록시
+│   │   ├── 🔔 notifications/     # 알림 API
+│   │   ├── 📄 policies/          # 정책 목록/상세/검색 API
+│   │   ├── 🖼️ uploads/           # S3 프로필 이미지 업로드
+│   │   └── 👤 users/             # 회원가입/로그인/JWT/이메일 인증
+│   ├── ⚙️ config/                # Django settings / urls / wsgi / asgi
+│   ├── 🧹 data_pipeline/         # 정책 데이터 적재·전처리 관련 코드
+│   ├── 🔎 rag_engine/
+│   │   ├── 🗄️ db/                # Vector/Graph DB 연결
+│   │   ├── 🕸️ graph/             # LangGraph workflow
+│   │   ├── 📝 prompts/           # LLM 프롬프트
+│   │   ├── 🧭 retriever/         # Hybrid Retriever
+│   │   └── 🧪 services/          # 조건 추출, 외부 검색, 답변 생성
+│   └── ✅ tests/                 # 백엔드 및 AI/RAG 테스트
+├── 🎨 frontend/
+│   ├── 🌐 public/
+│   └── 📁 src/
+│       ├── 🧭 app/               # React Router
+│       ├── 🧩 components/        # 공통/도메인 컴포넌트
+│       ├── 🪝 hooks/             # 커스텀 훅
+│       ├── 🧱 layouts/           # Root/Auth Layout
+│       ├── 🖥️ pages/             # 화면 단위 페이지
+│       ├── 🔌 services/          # API client 및 adapter
+│       ├── 🎨 styles/            # 디자인 토큰/반응형 CSS
+│       └── 🛠️ utils/             # 날짜/텍스트 포맷 유틸
+├── 🚀 deployment/                # dev/prod Docker Compose 및 Dockerfile
+├── 📚 documents/                 # 평가 산출물 및 구현 문서
+├── 🌐 nginx/                     # Nginx reverse proxy 설정
+├── 🧰 scripts/                   # 보조 스크립트
+├── 🐳 docker-compose.yml         # 로컬/통합 테스트용 compose
+└── 📦 requirements.txt           # RAG/데이터 분석용 루트 의존성
 ```
 
 <br />
