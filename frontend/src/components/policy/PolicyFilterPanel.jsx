@@ -5,6 +5,7 @@ import Select from '../common/Select.jsx';
 const filterOptions = {
   category: ['전체', '주거', '금융', '취업', '교육', '창업'],
   region: ['전체', '서울', '경기', '인천', '부산', '대구', '광주', '대전'],
+  // status: ['전체', '신청가능', '마감임박', '마감'],
   income: ['전체', '제한없음', '중위소득', '저소득']
 };
 
@@ -20,6 +21,10 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
   }, [filters]);
 
   const updateDraft = (key, value) => {
+    if (key === 'includeClosed') {
+      setDraftFilters((current) => ({ ...current, includeClosed: value }));
+      return;
+    }
     setDraftFilters((current) => ({ ...current, [key]: value || '전체' }));
   };
 
@@ -32,7 +37,7 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
       age: '',
       category: '전체',
       region: '전체',
-      excludeClosed: true,
+      includeClosed: false,
       income: '전체'
     });
     onReset?.();
@@ -101,7 +106,7 @@ export default function PolicyFilterPanel({ filters, onChange, onReset }) {
         <strong>조건 입력 팁</strong>
         <ul>
           <li>먼저 검색창에서 궁금한 정책을<br />검색해 주세요.</li>
-          <li>더 정확한 결과가 필요하면<br />분야, 지역, 상태, 소득조건을<br />추가로 적용해 주세요.</li>
+          <li>더 정확한 결과가 필요하면<br />분야, 지역, 소득조건을<br />추가로 적용해 주세요.</li>
         </ul>
       </div>
     </aside>

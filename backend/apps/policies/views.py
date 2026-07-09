@@ -178,6 +178,9 @@ class PolicyListView(generics.ListAPIView):
         elif not include_closed:
             queryset = queryset.exclude(deadline_status="closed")
 
+        if not deadline_status and exclude_closed == "true":
+            queryset = queryset.exclude(deadline_status="closed")
+
         normalized_keyword = normalize_popular_search_keyword(keyword)
 
         if normalized_keyword and self.request.user.is_authenticated:

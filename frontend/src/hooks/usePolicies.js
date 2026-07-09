@@ -29,7 +29,7 @@ export function usePolicyList(params = {}) {
     params.region,
     params.sourceCategory,
     params.category,        // ✅ 추가
-    params.status,
+    params.includeClosed,
     params.income,
     params.deadlineStatus,
     params.incomeCondition,
