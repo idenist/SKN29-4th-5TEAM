@@ -39,7 +39,7 @@ export default function PolicyInfoSection({ policy }) {
             <ExternalLink size={16} aria-hidden="true" />
           </a>
         ) : (
-          <Button disabled>신청 링크 준비 중</Button>
+          <Button disabled className="policy-detail-apply-disabled">신청 링크 준비 중</Button>
         )}
       </div>
       <div className="policy-detail-tags" aria-label="관련 태그">
