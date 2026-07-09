@@ -79,7 +79,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
-    http_method_names = ["get", "post", "delete"]  # 댓글 수정은 범위 밖, 필요 시 put/patch 추가
+    http_method_names = ["get", "post", "patch", "delete"]  # patch 추가로 댓글 수정 허용
 
     def get_queryset(self):
         return Comment.objects.filter(
