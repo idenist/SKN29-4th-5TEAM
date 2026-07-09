@@ -70,7 +70,7 @@ const toPolicyParams = (params = {}) => ({
   income_condition: allValues.has(params.incomeCondition || params.income_condition || params.income)
     ? undefined
     : params.incomeCondition || params.income_condition || params.income,
-  deadline_status: normalizeDeadlineStatusParam(params.deadlineStatus || params.deadline_status || params.status),
+  exclude_closed: params.includeClosed ? undefined : true,
   limit: params.limit || undefined,
   offset: params.offset || undefined
 });

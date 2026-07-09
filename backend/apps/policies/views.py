@@ -119,6 +119,7 @@ class PolicyListView(generics.ListAPIView):
         age = self.request.query_params.get("age")
         income_condition = self.request.query_params.get("income_condition")
         deadline_status = self.request.query_params.get("deadline_status")
+        exclude_closed = self.request.query_params.get("exclude_closed")
 
         if keyword:
             queryset = queryset.filter(
@@ -169,6 +170,9 @@ class PolicyListView(generics.ListAPIView):
 
         if deadline_status:
             queryset = queryset.filter(deadline_status=deadline_status)
+
+        if not deadline_status and exclude_closed == "true":
+            queryset = queryset.exclude(deadline_status="closed")
 
         normalized_keyword = normalize_popular_search_keyword(keyword)
 

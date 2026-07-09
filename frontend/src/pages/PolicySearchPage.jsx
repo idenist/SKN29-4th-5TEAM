@@ -17,7 +17,7 @@ const initialFilters = {
   age: '',
   category: '전체',
   region: '전체',
-  status: '전체',
+  includeClosed: false,   // 상태 드롭다운 대신 토글
   income: '전체'
 };
 
@@ -26,7 +26,7 @@ function getFiltersFromSearchParams(searchParams) {
     age: searchParams.get('age') || initialFilters.age,
     category: searchParams.get('category') || initialFilters.category,
     region: searchParams.get('region') || initialFilters.region,
-    status: searchParams.get('status') || initialFilters.status,
+    includeClosed: searchParams.get('includeClosed') === 'true',
     income: searchParams.get('income') || initialFilters.income
   };
 }
@@ -44,7 +44,7 @@ function buildPolicySearchParams(keyword, filters, page = 1) {
   if (filters.age) nextParams.set('age', filters.age);
   if (filters.category !== initialFilters.category) nextParams.set('category', filters.category);
   if (filters.region !== initialFilters.region) nextParams.set('region', filters.region);
-  if (filters.status !== initialFilters.status) nextParams.set('status', filters.status);
+  if (filters.includeClosed) nextParams.set('includeClosed', 'true');
   if (filters.income !== initialFilters.income) nextParams.set('income', filters.income);
   if (page > 1) nextParams.set('page', String(page));
 
@@ -62,23 +62,23 @@ export default function PolicySearchPage() {
   const [page, setPage] = useState(() => getPageFromSearchParams(searchParams));
 
   const queryParams = useMemo(() => {
-    return {
-      keyword: submittedKeyword,
-      age: filters.age,
-      region: filters.region,
-      category: filters.category,
-      status: filters.status,
-      income: filters.income,
-      limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
-      enabled: true
+  return {
+    keyword: submittedKeyword,
+    age: filters.age,
+    region: filters.region,
+    category: filters.category,
+    includeClosed: filters.includeClosed,
+    income: filters.income,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+    enabled: true
     };
   }, [
     submittedKeyword,
     filters.age,
     filters.category,
     filters.region,
-    filters.status,
+    filters.includeClosed,
     filters.income,
     page
   ]);
@@ -129,7 +129,7 @@ export default function PolicySearchPage() {
       <PageHeader
         kicker="Policy Search"
         title="청년 정책 검색"
-        description="검색어, 나이, 분야, 지역, 상태, 소득조건을 조합해 정책을 찾아볼 수 있습니다."
+        description="검색어, 나이, 분야, 지역, 소득조건을 조합해 정책을 찾아볼 수 있습니다."
       />
 
       <div className="policy-search-layout">
@@ -150,6 +150,22 @@ export default function PolicySearchPage() {
               {totalCount > 0 && (
                 <span>{resultStart}-{resultEnd}번째 결과를 표시 중입니다.</span>
               )}
+            </div>
+            <div
+              className="policy-condition-toggle-field policy-result-toggle"
+              style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <label htmlFor="policy-include-closed-toggle">마감 정책 포함</label>
+              <button
+                id="policy-include-closed-toggle"
+                type="button"
+                role="switch"
+                aria-checked={filters.includeClosed}
+                className={`policy-toggle-switch ${filters.includeClosed ? 'is-on' : ''}`}
+                onClick={() => handleFilterChange({ ...filters, includeClosed: !filters.includeClosed })}
+              >
+                <span className="policy-toggle-knob" />
+              </button>
             </div>
           </Toolbar>
 
