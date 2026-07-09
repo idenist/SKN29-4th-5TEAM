@@ -129,7 +129,8 @@ export default function NewsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {remainingNews.map((news) => (
               <div 
-                key={news.id} 
+                key={news.id}
+                className="news-list-card" 
                 style={{ 
                   display: 'flex', 
                   backgroundColor: '#fff', 
@@ -192,7 +193,7 @@ export default function NewsPage() {
                 </div>
 
                 {/* 우측 수직 정렬형 메타 프레임 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', flexShrink: 0, minWidth: '160px', borderLeft: '1px solid #f1f5f9', paddingLeft: '20px' }}>
+                <div className="news-list-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', flexShrink: 0, minWidth: '160px', borderLeft: '1px solid #f1f5f9', paddingLeft: '20px' }}>
                   <span style={{ fontSize: '12.5px', color: '#9ca3af', marginBottom: '8px' }}>
                     {news.source} · {news.publishedAt}
                   </span>

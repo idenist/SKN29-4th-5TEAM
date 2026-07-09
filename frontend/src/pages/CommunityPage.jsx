@@ -7,8 +7,22 @@ import Spinner from '../components/common/Spinner.jsx';
 import CommunityToolbar from '../components/community/CommunityToolbar.jsx';
 import PostEditorModal from '../components/community/PostEditorModal.jsx';
 import { useCommunityPosts } from '../hooks/useCommunity.js';
+import { communityCategoryLabels } from '../services/adapters/communityAdapter.js';  // ← 새로 추가
 
-const PAGE_SIZE = 4;
+
+// 백엔드 CommunityPost.Category 와 동일하게 맞춘 매핑
+const PAGE_SIZE = 5;
+
+const CATEGORY_COLORS = {
+  general:    { bg: '#faf5ff', color: '#8b5cf6' },
+  housing:    { bg: '#eff6ff', color: '#3b82f6' },
+  finance:    { bg: '#fefce8', color: '#ca8a04' },
+  employment: { bg: '#ecfdf5', color: '#10b981' },
+  education:  { bg: '#fdf2f8', color: '#db2777' },
+  startup:    { bg: '#fff7ed', color: '#ea580c' },
+  etc:        { bg: '#f1f5f9', color: '#64748b' },
+};
+
 
 function matchesKeyword(post, keyword) {
   const normalized = keyword.trim().toLowerCase();
@@ -100,75 +114,89 @@ export default function CommunityPage() {
       ) : filteredPosts.length > 0 ? (
         <>
           {/* 📊 image_7559a2.png 지정 리스트 테이블 포맷 직접 구현 파트 */}
-          <div style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.01)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #edf2f7', color: '#475569', fontSize: '14px', fontWeight: '600' }}>
-                  <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>분류</th>
-                  <th style={{ padding: '18px 24px' }}>제목</th>
-                  <th style={{ padding: '18px 24px', width: '140px', textAlign: 'center' }}>작성자</th>
-                  <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>조회</th>
-                  <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>좋아요</th>
-                  <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>댓글</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedPosts.map((post) => {
-                  // 🟢 분류 데이터 값에 따른 둥근 원형 배지 가변 스타일 분기 정의
-                  let badgeStyle = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2' };
-                  let categoryLabel = "정보";
+          <div className="community-table-view" style={{ backgroundColor: '#fff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.01)' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '640px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #edf2f7', color: '#475569', fontSize: '14px', fontWeight: '600' }}>
+                    <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>분류</th>
+                    <th style={{ padding: '18px 24px' }}>제목</th>
+                    <th style={{ padding: '18px 24px', width: '140px', textAlign: 'center' }}>작성자</th>
+                    <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>조회</th>
+                    <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>좋아요</th>
+                    <th style={{ padding: '18px 24px', width: '100px', textAlign: 'center' }}>댓글</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedPosts.map((post) => {
+                    // 🟢 분류 데이터 값에 따른 둥근 원형 배지 가변 스타일 분기 정의
+                    const meta = CATEGORY_COLORS[post.category] || CATEGORY_COLORS.etc;
+                    const badgeStyle = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', backgroundColor: meta.bg, color: meta.color };
+                    const categoryLabel = post.categoryLabel || communityCategoryLabels[post.category] || '기타';
 
-                  if (post.category === 'review' || post.category === '후기') {
-                    badgeStyle.backgroundColor = '#ecfdf5';
-                    badgeStyle.color = '#10b981';
-                    categoryLabel = "후기";
-                  } else if (post.category === 'question' || post.category === '질문') {
-                    badgeStyle.backgroundColor = '#eff6ff';
-                    badgeStyle.color = '#3b82f6';
-                    categoryLabel = "질문";
-                  } else {
-                    badgeStyle.backgroundColor = '#faf5ff';
-                    badgeStyle.color = '#8b5cf6';
-                    categoryLabel = "정보";
-                  }
+                    return (
+                      <tr key={post.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '15px', color: '#334155' }}>
+                        {/* 분류 배지 (원형 세로 정렬 분기) */}
+                        <td style={{ padding: '14px 24px', textAlign: 'center' }}>
+                          <span style={badgeStyle}>
+                            {categoryLabel[0]}<br/>{categoryLabel[1]}
+                          </span>
+                        </td>
+                        {/* 제목 링크 */}
+                        <td style={{ padding: '14px 24px', fontWeight: '500', color: '#1e293b' }}>
+                          <Link
+                            to={`/community/${post.id}`}
+                            style={{ color: 'inherit', textDecoration: 'none' }}
+                          >
+                            {post.title}
+                          </Link>
+                        </td>
+                        {/* 작성자 */}
+                        <td style={{ padding: '14px 24px', textAlign: 'center', color: '#475569' }}>
+                          {post.authorName || post.author || '청년유저'}
+                        </td>
+                        {/* 조회수 안전 처리 */}
+                        <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
+                          {post.views !== undefined ? post.views.toLocaleString() : '0'}
+                        </td>
+                        {/* 좋아요수 안전 처리 */}
+                        <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
+                          {post.likes !== undefined ? post.likes.toLocaleString() : '0'}
+                        </td>
+                        <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
+                          {post.commentsCount !== undefined ? post.commentsCount.toLocaleString() : '0'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-                  return (
-                    <tr key={post.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '15px', color: '#334155' }}>
-                      {/* 분류 배지 (원형 세로 정렬 분기) */}
-                      <td style={{ padding: '14px 24px', textAlign: 'center' }}>
-                        <span style={badgeStyle}>
-                          {categoryLabel[0]}<br/>{categoryLabel[1]}
-                        </span>
-                      </td>
-                      {/* 제목 링크 */}
-                      <td style={{ padding: '14px 24px', fontWeight: '500', color: '#1e293b' }}>
-                        <Link
-                          to={`/community/${post.id}`}
-                          style={{ color: 'inherit', textDecoration: 'none' }}
-                        >
-                          {post.title}
-                        </Link>
-                      </td>
-                      {/* 작성자 */}
-                      <td style={{ padding: '14px 24px', textAlign: 'center', color: '#475569' }}>
-                        {post.authorName || post.author || '청년유저'}
-                      </td>
-                      {/* 조회수 안전 처리 */}
-                      <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
-                        {post.views !== undefined ? post.views.toLocaleString() : '0'}
-                      </td>
-                      {/* 좋아요수 안전 처리 */}
-                      <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
-                        {post.likes !== undefined ? post.likes.toLocaleString() : '0'}
-                      </td>
-                      <td style={{ padding: '14px 24px', textAlign: 'center', color: '#64748b' }}>
-                        {post.commentsCount !== undefined ? post.commentsCount.toLocaleString() : '0'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="community-card-view">
+            {pagedPosts.map((post) => {
+              const meta = CATEGORY_COLORS[post.category] || CATEGORY_COLORS.etc;
+              const badgeStyle = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '50%', fontSize: '11px', fontWeight: 'bold', lineHeight: '1.2', backgroundColor: meta.bg, color: meta.color, flexShrink: 0 };
+              const categoryLabel = post.categoryLabel || communityCategoryLabels[post.category] || '기타';
+
+              return (
+                <Link key={post.id} to={`/community/${post.id}`} className="community-card-item">
+                  <div className="community-card-top">
+                    <span style={badgeStyle}>
+                      {categoryLabel[0]}<br/>{categoryLabel[1]}
+                    </span>
+                    <h3>{post.title}</h3>
+                  </div>
+                  <div className="community-card-meta-row">
+                    <span>{post.authorName || post.author || '청년유저'}</span>
+                    <span>조회 {post.views !== undefined ? post.views.toLocaleString() : '0'}</span>
+                    <span>좋아요 {post.likes !== undefined ? post.likes.toLocaleString() : '0'}</span>
+                    <span>댓글 {post.commentsCount !== undefined ? post.commentsCount.toLocaleString() : '0'}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />

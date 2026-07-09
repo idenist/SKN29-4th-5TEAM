@@ -20,7 +20,7 @@ export default function CommunityToolbar({
         value={keyword}
         onChange={onKeywordChange}
         onSubmit={onSearch}
-        placeholder="제목, 내용, 태그로 검색"
+        placeholder="제목, 내용으로 검색"
         label="커뮤니티 검색어"
       />
       <div className="community-toolbar-actions">

@@ -51,16 +51,6 @@ function buildPolicySearchParams(keyword, filters, page = 1) {
   return nextParams;
 }
 
-function isDefaultFilters(filters) {
-  return (
-    !filters.age &&
-    filters.category === initialFilters.category &&
-    filters.region === initialFilters.region &&
-    filters.excludeClosed === initialFilters.excludeClosed &&
-    filters.income === initialFilters.income
-  );
-}
-
 export default function PolicySearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -70,8 +60,6 @@ export default function PolicySearchPage() {
   const [submittedKeyword, setSubmittedKeyword] = useState(keywordParam);
   const [filters, setFilters] = useState(() => getFiltersFromSearchParams(searchParams));
   const [page, setPage] = useState(() => getPageFromSearchParams(searchParams));
-
-  const hasSearchCondition = Boolean(submittedKeyword.trim()) || !isDefaultFilters(filters);
 
   const queryParams = useMemo(() => {
     return {
@@ -83,7 +71,7 @@ export default function PolicySearchPage() {
       income: filters.income,
       limit: PAGE_SIZE,
       offset: (page - 1) * PAGE_SIZE,
-      enabled: hasSearchCondition
+      enabled: true
     };
   }, [
     submittedKeyword,
@@ -92,21 +80,15 @@ export default function PolicySearchPage() {
     filters.region,
     filters.excludeClosed,
     filters.income,
-    page,
-    hasSearchCondition
+    page
   ]);
 
   const { policies, totalCount, isLoading, error, refetch } = usePolicyList(queryParams);
 
-  const filteredPolicies = useMemo(() => {
-    if (!hasSearchCondition) return [];
-    return policies;
-  }, [hasSearchCondition, policies]);
-
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const resultStart = totalCount > 0 ? (safePage - 1) * PAGE_SIZE + 1 : 0;
-  const resultEnd = totalCount > 0 ? resultStart + filteredPolicies.length - 1 : 0;
+  const resultEnd = totalCount > 0 ? resultStart + policies.length - 1 : 0;
 
   useEffect(() => {
     setKeyword(keywordParam);
@@ -175,41 +157,20 @@ export default function PolicySearchPage() {
 
           <Toolbar className="policy-result-toolbar">
             <div>
-              {hasSearchCondition ? (
-                <>
-                  <strong>총 {totalCount}개 정책</strong>
-                  <span>{resultStart}-{resultEnd}번째 결과를 표시 중입니다.</span>
-                </>
-              ) : (
-                <>
-                  <strong>검색 결과 없음</strong>
-                  <span>검색어를 입력하거나 필터를 선택해 주세요.</span>
-                </>
+              <strong>총 {totalCount}개 정책</strong>
+              {totalCount > 0 && (
+                <span>{resultStart}-{resultEnd}번째 결과를 표시 중입니다.</span>
               )}
             </div>
-
-            <label className="policy-exclude-closed-toggle">
-              <input
-                type="checkbox"
-                checked={filters.excludeClosed}
-                onChange={handleExcludeClosedChange}
-              />
-              <span>마감된 공고 제외</span>
-            </label>
           </Toolbar>
 
-          {!hasSearchCondition ? (
-            <EmptyState
-              title="검색 결과가 없습니다"
-              description="검색어를 입력하거나 조건 입력 필터를 적용하면 정책을 찾아볼 수 있습니다."
-            />
-          ) : isLoading ? (
+          {isLoading ? (
             <Spinner label="정책을 불러오는 중..." />
           ) : error ? (
             <ErrorState title="정책 목록을 불러오지 못했습니다" description={error} onRetry={refetch} />
-          ) : filteredPolicies.length > 0 ? (
+          ) : policies.length > 0 ? (
             <>
-              <PolicyList policies={filteredPolicies} />
+              <PolicyList policies={policies} />
               <Pagination page={safePage} totalPages={totalPages} onPageChange={handlePageChange} />
             </>
           ) : (
