@@ -11,7 +11,7 @@ export default function Footer() {
         </section>
         <div className="layout-footer-info" aria-label="프로젝트 정보">
           <p>SK Networks ENCORE</p>
-          <p>SKN-29-똥개녀석들</p>
+          <p>SKN-29-백수구조대</p>
           <p>서울 금천구 가산디지털1로 25 18층 플레이데이터</p>
         </div>
       </div>

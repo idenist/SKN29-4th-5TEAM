@@ -23,7 +23,7 @@ export default function PostDetail({ post, onLike, isLikeLoading = false, likeEr
             disabled={isLikeLoading}
             aria-pressed={post.isLiked}
           >
-            <ThumbsUp size={15} aria-hidden="true" />
+            <ThumbsUp size={15} aria-hidden="true" fill={post.isLiked ? 'currentColor' : 'none'} />
             {post.likes}
           </button>
           <span>
